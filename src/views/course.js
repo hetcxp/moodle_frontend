@@ -19,7 +19,7 @@ export async function renderCourse(container, courseId) {
   container.appendChild(content);
 
   try {
-    const contents = await CourseService.getCourseContents(courseId, true);
+    const contents = await CourseService.getCourseContents(courseId);
     let completionMap = {};
     content.innerHTML = '';
 
@@ -248,7 +248,7 @@ export async function renderCourse(container, courseId) {
       const contentWrapper = document.createElement('div');
 
       if (mod.modname === 'page') {
-        const pageContent = await CourseService.getPageContent(courseId, mod.id, true);
+        const pageContent = await CourseService.getPageContent(courseId, mod.id);
         if (pageContent) {
           contentWrapper.className = 'resource-content page-content';
           contentWrapper.innerHTML = replacePluginfileUrls(pageContent.content || pageContent.intro);
@@ -486,7 +486,7 @@ export async function renderCourse(container, courseId) {
           embedUrl = `${moodleBase}/local/headless/h5p.php?id=${mod.id}`;
 
           // Fetch the H5P introduction (description) asynchronously and render it
-          CourseService.getH5pActivityIntro(courseId, mod.id, true).then(intro => {
+          CourseService.getH5pActivityIntro(courseId, mod.id).then(intro => {
             if (intro) {
               const descDiv = document.createElement('div');
               descDiv.className = 'h5p-description';
