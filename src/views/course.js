@@ -4,6 +4,7 @@ import { createLoader } from '../components/loader.js';
 import { createQuizRunner } from '../components/quiz-runner.js';
 import { replacePluginfileUrls, replaceRelativeImages } from '../utils/image.js';
 import { API_CONFIG } from '../config/api.js';
+import { AuthService } from '../services/auth.js';
 
 export async function renderCourse(container, courseId) {
   if (window.h5pMessageListener) {
@@ -483,14 +484,8 @@ export async function renderCourse(container, courseId) {
         if (mod.modname === 'h5pactivity') {
           // Use our custom local_headless h5p.php player redirection
           // which forces the core H5P player in embedded layout WITH xAPI tracking enabled
-          let moodleBase = mod.url.split('/mod/')[0];
-          
-          // Route through proxy locally to avoid third-party cookie issues during autologin
-          if (API_CONFIG.moodleUrl.startsWith('/')) {
-            moodleBase = moodleBase.replace(/^https?:\/\/[^\/]+/, API_CONFIG.moodleUrl);
-          }
-          
-          embedUrl = `${moodleBase}/local/headless/h5p.php?id=${mod.id}`;
+          const moodleBase = mod.url.split('/mod/')[0];
+          embedUrl = `${moodleBase}/local/headless/h5p.php?id=${mod.id}&token=${AuthService.getToken()}`;
 
           // Fetch the H5P introduction (description) asynchronously and render it
           CourseService.getH5pActivityIntro(courseId, mod.id).then(intro => {
@@ -502,17 +497,20 @@ export async function renderCourse(container, courseId) {
               contentWrapper.insertBefore(descDiv, iframe);
             }
           });
+          
+          iframe.className = 'resource-content h5p-iframe';
+          contentWrapper.appendChild(iframe);
+          iframe.src = embedUrl; // bypass autologin wrapper
         } else {
           // Para otros recursos, intentamos ocultar la interfaz con embed=1
           embedUrl += (embedUrl.includes('?') ? '&' : '?') + 'embed=1';
+          iframe.className = 'resource-content';
+          contentWrapper.appendChild(iframe);
+          
+          CourseService.getAutoLoginUrl(embedUrl).then(autologinUrl => {
+            iframe.src = autologinUrl;
+          });
         }
-        
-        iframe.className = 'resource-content' + (mod.modname === 'h5pactivity' ? ' h5p-iframe' : '');
-        contentWrapper.appendChild(iframe);
-        
-        CourseService.getAutoLoginUrl(embedUrl).then(autologinUrl => {
-          iframe.src = autologinUrl;
-        });
       } else {
         contentWrapper.innerHTML = '<p class="empty-state">Este recurso no se puede visualizar directamente.</p>';
       }

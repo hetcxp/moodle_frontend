@@ -2,13 +2,7 @@ import { API_CONFIG } from '../config/api.js';
 import { AuthService } from '../services/auth.js';
 
 export function getCourseImageUrl(course) {
-  const replaceBaseUrl = (url) => {
-    // If running locally, route through the proxy to avoid CORS
-    if (API_CONFIG.moodleUrl.startsWith('/')) {
-      return url.replace(/^https?:\/\/[^\/]+/, API_CONFIG.moodleUrl);
-    }
-    return url;
-  };
+  const replaceBaseUrl = (url) => url;
 
   // 1. If course has direct courseimage field (Moodle 4.0+ enrol endpoint)
   if (course.courseimage) {
