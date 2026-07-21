@@ -2,22 +2,35 @@ import { API_CONFIG } from '../config/api.js';
 import { AuthService } from '../services/auth.js';
 
 export function getCourseImageUrl(course) {
+  const replaceBaseUrl = (url) => {
+    // If running locally, route through the proxy to avoid CORS
+    if (API_CONFIG.moodleUrl.startsWith('/')) {
+      return url.replace(/^https?:\/\/[^\/]+/, API_CONFIG.moodleUrl);
+    }
+    return url;
+  };
+
   // 1. If course has direct courseimage field (Moodle 4.0+ enrol endpoint)
   if (course.courseimage) {
-    if (course.courseimage.includes('?')) {
-      return `${course.courseimage}&token=${AuthService.getToken()}`;
+    const url = replaceBaseUrl(course.courseimage);
+    // Use webservice/pluginfile.php instead of pluginfile.php to allow token authentication
+    const wsUrl = url.replace(/\/pluginfile\.php/, '/webservice/pluginfile.php');
+    if (wsUrl.includes('?')) {
+      return `${wsUrl}&token=${AuthService.getToken()}`;
     }
-    return `${course.courseimage}?token=${AuthService.getToken()}`;
+    return `${wsUrl}?token=${AuthService.getToken()}`;
   }
 
   // 2. If course has overviewfiles array (Moodle search endpoint)
   if (course.overviewfiles && course.overviewfiles.length > 0) {
     const file = course.overviewfiles[0];
     if (file.fileurl) {
-      if (file.fileurl.includes('?')) {
-        return `${file.fileurl}&token=${AuthService.getToken()}`;
+      const url = replaceBaseUrl(file.fileurl);
+      const wsUrl = url.replace(/\/pluginfile\.php/, '/webservice/pluginfile.php');
+      if (wsUrl.includes('?')) {
+        return `${wsUrl}&token=${AuthService.getToken()}`;
       }
-      return `${file.fileurl}?token=${AuthService.getToken()}`;
+      return `${wsUrl}?token=${AuthService.getToken()}`;
     }
   }
 

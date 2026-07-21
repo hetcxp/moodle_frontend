@@ -3,6 +3,7 @@ import { createHeader } from '../components/header.js';
 import { createLoader } from '../components/loader.js';
 import { createQuizRunner } from '../components/quiz-runner.js';
 import { replacePluginfileUrls, replaceRelativeImages } from '../utils/image.js';
+import { API_CONFIG } from '../config/api.js';
 
 export async function renderCourse(container, courseId) {
   if (window.h5pMessageListener) {
@@ -482,7 +483,13 @@ export async function renderCourse(container, courseId) {
         if (mod.modname === 'h5pactivity') {
           // Use our custom local_headless h5p.php player redirection
           // which forces the core H5P player in embedded layout WITH xAPI tracking enabled
-          const moodleBase = mod.url.split('/mod/')[0];
+          let moodleBase = mod.url.split('/mod/')[0];
+          
+          // Route through proxy locally to avoid third-party cookie issues during autologin
+          if (API_CONFIG.moodleUrl.startsWith('/')) {
+            moodleBase = moodleBase.replace(/^https?:\/\/[^\/]+/, API_CONFIG.moodleUrl);
+          }
+          
           embedUrl = `${moodleBase}/local/headless/h5p.php?id=${mod.id}`;
 
           // Fetch the H5P introduction (description) asynchronously and render it
