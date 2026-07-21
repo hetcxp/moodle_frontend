@@ -360,3 +360,24 @@
   width: auto;
   min-width: 120px;
 }
+
+/* Responsive images in course content */
+.course-main img,
+.resource-content img,
+.topic-summary img,
+.scorm-description img,
+.h5p-description img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px; /* Para mantener la estética redondeada */
+}
+
+/* Book Layout Responsive */
+@media (max-width: 768px) {
+  .book-layout {
+    flex-direction: column !important;
+  }
+  .book-sidebar {
+    width: 100% !important;
+  }
+}
