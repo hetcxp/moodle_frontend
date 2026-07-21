@@ -2,7 +2,6 @@ import { CourseService } from '../services/courses.js';
 import { createHeader } from '../components/header.js';
 import { createLoader } from '../components/loader.js';
 import { createQuizRunner } from '../components/quiz-runner.js';
-import { replacePluginfileUrls, replaceRelativeImages } from '../utils/image.js';
 
 export async function renderCourse(container, courseId) {
   if (window.h5pMessageListener) {
@@ -19,7 +18,7 @@ export async function renderCourse(container, courseId) {
   container.appendChild(content);
 
   try {
-    const contents = await CourseService.getCourseContents(courseId, true);
+    const contents = await CourseService.getCourseContents(courseId);
     let completionMap = {};
     content.innerHTML = '';
 
@@ -179,7 +178,7 @@ export async function renderCourse(container, courseId) {
           topicDiv.className = 'course-topic';
           topicDiv.innerHTML = `<h3>${topic.name}</h3>`;
           if (topic.summary) {
-            topicDiv.innerHTML += `<div class="topic-summary">${replacePluginfileUrls(topic.summary)}</div>`;
+            topicDiv.innerHTML += `<div class="topic-summary">${topic.summary}</div>`;
           }
           
           if (topic.modules && topic.modules.length > 0) {
@@ -248,10 +247,10 @@ export async function renderCourse(container, courseId) {
       const contentWrapper = document.createElement('div');
 
       if (mod.modname === 'page') {
-        const pageContent = await CourseService.getPageContent(courseId, mod.id, true);
+        const pageContent = await CourseService.getPageContent(courseId, mod.id);
         if (pageContent) {
           contentWrapper.className = 'resource-content page-content';
-          contentWrapper.innerHTML = replacePluginfileUrls(pageContent.content || pageContent.intro);
+          contentWrapper.innerHTML = pageContent.content || pageContent.intro;
         } else {
           contentWrapper.innerHTML = '<p class="empty-state">No se pudo cargar el contenido.</p>';
         }
@@ -262,7 +261,7 @@ export async function renderCourse(container, courseId) {
         if (mod.description) {
           scormHtml += `
             <div class="scorm-description" style="margin-bottom: 2rem; text-align: left;">
-              ${replacePluginfileUrls(mod.description)}
+              ${mod.description}
             </div>
           `;
         }
@@ -324,157 +323,6 @@ export async function renderCourse(container, courseId) {
           if (currentUpdateCompletionCard) currentUpdateCompletionCard();
         });
         contentWrapper.appendChild(quizRunner);
-      } else if (mod.modname === 'book') {
-        contentWrapper.className = 'resource-content book-layout';
-        contentWrapper.style.cssText = 'display: flex; gap: 2rem; align-items: flex-start;';
-
-        const bookSidebar = document.createElement('div');
-        bookSidebar.className = 'book-sidebar';
-        bookSidebar.style.cssText = 'width: 250px; flex-shrink: 0; background: var(--color-surface); border-radius: 8px; border: 1px solid var(--color-border); padding: 1rem;';
-        
-        const bookContent = document.createElement('div');
-        bookContent.className = 'book-content-area';
-        bookContent.style.cssText = 'flex: 1; background: var(--color-surface); border-radius: 8px; border: 1px solid var(--color-border); padding: 2rem; min-height: 400px;';
-
-        if (!mod.contents || mod.contents.length === 0) {
-          bookContent.innerHTML = '<p class="empty-state">Este libro no tiene capítulos.</p>';
-        } else {
-          // Filtrar los html que son los capitulos
-          const chapters = mod.contents.filter(c => c.type === 'file' && c.filename.endsWith('.html') && c.filename !== 'index.html');
-          
-          // A veces Moodle exporta un index.html genérico, pero los capitulos son los demás. Si está vacío, usar todos.
-          const validChapters = chapters.length > 0 ? chapters : mod.contents.filter(c => c.type === 'file' && c.filename.endsWith('.html'));
-
-          let currentChapterIndex = 0;
-          const chapterTitles = validChapters.map((_, i) => `Cargando capítulo...`);
-          const htmlCache = {};
-
-          const renderBookSidebar = () => {
-            bookSidebar.innerHTML = '<h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Tabla de Contenidos</h3>';
-            const ul = document.createElement('ul');
-            ul.style.cssText = 'list-style: none; padding: 0; margin: 0;';
-            validChapters.forEach((chap, idx) => {
-              const li = document.createElement('li');
-              li.id = `book-chap-${idx}`;
-              li.style.cssText = `padding: 0.75rem 1rem; margin-bottom: 0.25rem; border-radius: 4px; cursor: pointer; color: ${idx === currentChapterIndex ? 'var(--color-primary)' : 'var(--color-text-primary)'}; background: ${idx === currentChapterIndex ? 'var(--color-bg-hover)' : 'transparent'}; font-weight: ${idx === currentChapterIndex ? '600' : '400'}; transition: all 0.2s;`;
-              
-              li.textContent = chapterTitles[idx];
-              li.onclick = () => renderChapter(idx);
-              ul.appendChild(li);
-            });
-            bookSidebar.appendChild(ul);
-          };
-
-          const renderChapter = async (idx) => {
-            currentChapterIndex = idx;
-            renderBookSidebar();
-            bookContent.innerHTML = '<div style="text-align:center; padding: 2rem;">Cargando capítulo...</div>';
-            
-            const chap = validChapters[idx];
-            let html = htmlCache[idx];
-            
-            if (!html) {
-              html = await CourseService.fetchFileContent(chap.fileurl);
-              if (html) htmlCache[idx] = html;
-            }
-            
-            if (html) {
-              let finalHtml = replacePluginfileUrls(html);
-              finalHtml = replaceRelativeImages(finalHtml, mod.contents);
-              bookContent.innerHTML = finalHtml;
-            } else {
-              bookContent.innerHTML = '<p class="empty-state">No se pudo cargar el capítulo.</p>';
-            }
-
-            // Navegacion dentro del libro
-            const bookNav = document.createElement('div');
-            bookNav.style.cssText = 'display: flex; justify-content: space-between; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--color-border);';
-            
-            const prevBtn = document.createElement('button');
-            prevBtn.className = 'btn-secondary';
-            prevBtn.textContent = 'Capítulo anterior';
-            prevBtn.disabled = idx === 0;
-            prevBtn.onclick = () => renderChapter(idx - 1);
-            
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'btn-primary';
-            nextBtn.textContent = 'Siguiente capítulo';
-            nextBtn.disabled = idx === validChapters.length - 1;
-            nextBtn.onclick = () => renderChapter(idx + 1);
-            
-            bookNav.appendChild(prevBtn);
-            bookNav.appendChild(nextBtn);
-            bookContent.appendChild(bookNav);
-          };
-
-          const loadAllTitles = async () => {
-            await Promise.all(validChapters.map(async (chap, idx) => {
-              const html = await CourseService.fetchFileContent(chap.fileurl);
-              if (html) {
-                htmlCache[idx] = html;
-                
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                
-                // Encontrar el primer elemento de contenido real
-                const firstContent = doc.querySelector('p, ul, ol, table, img');
-                const headings = Array.from(doc.querySelectorAll('h1, h2, h3, h4, h5, h6'));
-                
-                let validHeadings = headings;
-                if (firstContent) {
-                  validHeadings = headings.filter(h => {
-                    return (h.compareDocumentPosition(firstContent) & Node.DOCUMENT_POSITION_FOLLOWING);
-                  });
-                }
-                if (validHeadings.length === 0 && headings.length > 0) {
-                  validHeadings = [headings[0]];
-                }
-                
-                let title = '';
-                if (validHeadings.length > 0) {
-                  // Priorizar el heading más profundo (ej: H3 sobre H2 si ambos están al principio)
-                  let bestHeading = validHeadings[0];
-                  for (let i = 1; i < validHeadings.length; i++) {
-                    const currentTag = parseInt(bestHeading.tagName.replace('H', ''));
-                    const nextTag = parseInt(validHeadings[i].tagName.replace('H', ''));
-                    if (nextTag > currentTag) {
-                      bestHeading = validHeadings[i];
-                    }
-                  }
-                  title = bestHeading.textContent.trim();
-                } else {
-                  const strong = doc.querySelector('strong, b');
-                  if (strong) {
-                    // Check if it's before firstContent
-                    if (!firstContent || (strong.compareDocumentPosition(firstContent) & Node.DOCUMENT_POSITION_FOLLOWING)) {
-                      title = strong.textContent.trim();
-                    }
-                  }
-                }
-                
-                if (title.length > 0) {
-                  chapterTitles[idx] = title;
-                  const li = bookSidebar.querySelector(`#book-chap-${idx}`);
-                  if (li) li.textContent = title;
-                }
-                
-                // Si la extracción falla y aún dice "Cargando", ponerle "Capítulo X"
-                if (chapterTitles[idx] === 'Cargando capítulo...') {
-                   chapterTitles[idx] = `Capítulo ${idx + 1}`;
-                   const li = bookSidebar.querySelector(`#book-chap-${idx}`);
-                   if (li) li.textContent = chapterTitles[idx];
-                }
-              }
-            }));
-          };
-
-          renderChapter(0);
-          loadAllTitles();
-        }
-
-        contentWrapper.appendChild(bookSidebar);
-        contentWrapper.appendChild(bookContent);
-
       } else if (mod.url) {
         const iframe = document.createElement('iframe');
         let embedUrl = mod.url;
@@ -486,12 +334,12 @@ export async function renderCourse(container, courseId) {
           embedUrl = `${moodleBase}/local/headless/h5p.php?id=${mod.id}`;
 
           // Fetch the H5P introduction (description) asynchronously and render it
-          CourseService.getH5pActivityIntro(courseId, mod.id, true).then(intro => {
+          CourseService.getH5pActivityIntro(courseId, mod.id).then(intro => {
             if (intro) {
               const descDiv = document.createElement('div');
               descDiv.className = 'h5p-description';
               descDiv.style.cssText = 'margin-bottom: 1.5rem; padding: 1.5rem; background: var(--color-surface); border-radius: 8px; border: 1px solid var(--color-border); line-height: 1.6;';
-              descDiv.innerHTML = replacePluginfileUrls(intro);
+              descDiv.innerHTML = intro;
               contentWrapper.insertBefore(descDiv, iframe);
             }
           });

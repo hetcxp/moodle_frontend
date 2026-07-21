@@ -72,13 +72,12 @@ export const CourseService = {
     }
   },
 
-  async getPageContent(courseId, cmId, useAdmin = false) {
+  async getPageContent(courseId, cmId) {
     try {
-      const customToken = useAdmin ? import.meta.env.VITE_MOODLE_ADMIN_TOKEN : null;
       // First, get all pages for the course
       const response = await MoodleApi.call('mod_page_get_pages_by_courses', {
         'courseids[0]': courseId
-      }, customToken);
+      });
       
       if (response && response.pages) {
         // Find the specific page by coursemodule id
@@ -149,35 +148,17 @@ export const CourseService = {
     }
   },
 
-  async getH5pActivityIntro(courseId, cmId, useAdmin = false) {
+  async getH5pActivityIntro(courseId, cmId) {
     try {
-      const customToken = useAdmin ? import.meta.env.VITE_MOODLE_ADMIN_TOKEN : null;
       const result = await MoodleApi.call('mod_h5pactivity_get_h5pactivities_by_courses', {
         'courseids[0]': courseId
-      }, customToken);
+      });
       if (result && result.h5pactivities) {
         const activity = result.h5pactivities.find(a => a.coursemodule == cmId);
         return activity ? activity.intro : null;
       }
     } catch (e) {
       console.error('Failed to fetch H5P intro', e);
-    }
-    return null;
-  },
-
-  async fetchFileContent(fileUrl) {
-    const token = AuthService.getToken();
-    if (!token || !fileUrl) return null;
-    
-    try {
-      const joiner = fileUrl.includes('?') ? '&' : '?';
-      const urlWithToken = `${fileUrl}${joiner}token=${token}`;
-      const response = await fetch(urlWithToken);
-      if (response.ok) {
-        return await response.text();
-      }
-    } catch (e) {
-      console.error('Failed to fetch file content', e);
     }
     return null;
   }
