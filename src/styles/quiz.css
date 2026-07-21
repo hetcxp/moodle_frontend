@@ -1,0 +1,428 @@
+/* Quiz Runner Native Styles */
+
+/* Wrapper for Quiz in Course View */
+.resource-content.quiz-content {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+.quiz-runner-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+/* Header & Timer Bar */
+.quiz-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: var(--color-surface, #ffffff) !important;
+  border: 1px solid var(--color-border, rgba(0,0,0,0.08)) !important;
+  border-radius: var(--radius-card, 12px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.quiz-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+  font-weight: 700;
+  font-family: monospace;
+  border-radius: 20px;
+  font-size: 0.95rem;
+}
+
+.quiz-timer-badge.warning {
+  animation: pulse-timer 1s infinite alternate;
+}
+
+@keyframes pulse-timer {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.05); opacity: 0.8; }
+}
+
+/* Cover Card Screen */
+.quiz-cover-card {
+  padding: 2.25rem;
+  background: var(--color-surface, #ffffff) !important;
+  border: 1px solid var(--color-border, rgba(0,0,0,0.08)) !important;
+  border-radius: var(--radius-card, 12px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.quiz-cover-card h2 {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #111827);
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.02em;
+}
+
+.quiz-intro-text {
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary, #4b5563);
+  font-size: 1.05rem;
+}
+
+.quiz-attempts-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+.quiz-attempts-table th,
+.quiz-attempts-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--color-border, rgba(0,0,0,0.08));
+  text-align: left;
+}
+
+.quiz-attempts-table th {
+  color: var(--color-text-primary, #111827);
+  font-weight: 600;
+}
+
+.quiz-attempts-table .btn-secondary,
+.quiz-attempts-table .btn-primary {
+  width: auto !important;
+  padding: 0.5rem 1.25rem !important;
+  font-size: 0.9rem !important;
+}
+
+/* Question Box Container */
+.quiz-question-box {
+  padding: 1.85rem 2.25rem;
+  background: var(--color-surface, #ffffff) !important;
+  border: 1px solid var(--color-border, rgba(0,0,0,0.08)) !important;
+  border-radius: var(--radius-card, 12px);
+  margin-bottom: 0.75rem !important; /* Reduced gap to pagination bar */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.quiz-question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border, rgba(0,0,0,0.08));
+}
+
+.quiz-question-number {
+  font-weight: 700;
+  color: var(--color-primary, #1a73e8);
+  font-size: 1.1rem;
+}
+
+.quiz-question-state {
+  font-size: 0.85rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  background: rgba(26, 115, 232, 0.1);
+  color: var(--color-primary, #1a73e8);
+  font-weight: 600;
+}
+
+/* Moodle Question Native HTML Overrides */
+
+/* 1. Completely Hide Moodle Screen Reader & Sidebar Raw Meta Elements */
+.quiz-question-body .accesshide,
+.quiz-question-body .questionflag,
+.quiz-question-body .flag,
+.quiz-question-body .editquestion,
+.quiz-question-body .info,
+.quiz-question-body legend {
+  display: none !important;
+}
+
+/* 2. Media & SVG Scaling */
+.quiz-question-body img,
+.quiz-question-body svg {
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: 350px !important;
+  object-fit: contain !important;
+  margin: 0.5rem 0 !important;
+}
+
+/* 3. Reset Fieldsets & Raw Containers */
+.quiz-question-body fieldset {
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+}
+
+.quiz-question-body .que {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+}
+
+/* 4. Question Text Styling & Inner Callout Normalization */
+.quiz-question-body .que .qtext {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--color-text-primary, #111827);
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+
+/* Normalize inner inline backgrounds in Moodle HTML (e.g. Scenarios/Cases) */
+.quiz-question-body .que .qtext div,
+.quiz-question-body .que .qtext p,
+.quiz-question-body .que .qtext section {
+  background-color: transparent;
+  color: var(--color-text-primary, #111827);
+}
+
+/* Style case scenario callouts gracefully */
+.quiz-question-body .que .qtext [style*="border"],
+.quiz-question-body .que .qtext [class*="alert"],
+.quiz-question-body .que .qtext [class*="callout"],
+.quiz-question-body .que .qtext div[style*="background"] {
+  background-color: rgba(26, 115, 232, 0.04) !important;
+  border-left: 4px solid var(--color-primary, #1a73e8) !important;
+  border-radius: var(--radius-input, 8px) !important;
+  padding: 1.1rem 1.25rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+/* 5. Options Answer Layout */
+.quiz-question-body .que .answer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.quiz-question-body .que .answer .r0,
+.quiz-question-body .que .answer .r1,
+.quiz-question-body .que .answer > div:not([class*="clearchoice"]) {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 0.85rem !important;
+  padding: 0.9rem 1.2rem !important;
+  border-radius: var(--radius-input, 8px) !important;
+  background: var(--color-background, #f4f5f7) !important;
+  border: 1px solid var(--color-border, rgba(0,0,0,0.08)) !important;
+  cursor: pointer !important;
+  transition: border-color 0.2s, background-color 0.2s !important;
+}
+
+.quiz-question-body .que .answer .r0:hover,
+.quiz-question-body .que .answer .r1:hover,
+.quiz-question-body .que .answer > div:not([class*="clearchoice"]):hover {
+  border-color: var(--color-primary, #1a73e8) !important;
+  background: rgba(26, 115, 232, 0.05) !important;
+}
+
+/* Inputs (Radio / Checkbox) */
+.quiz-question-body .que .answer input[type="radio"]:not([name*="clearchoice"]),
+.quiz-question-body .que .answer input[type="checkbox"] {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  margin-top: 0.15rem !important;
+  flex-shrink: 0 !important;
+  accent-color: var(--color-primary, #1a73e8) !important;
+  cursor: pointer !important;
+}
+
+/* Text Labels & Containers */
+.quiz-question-body .que .answer label,
+.quiz-question-body .que .answer .d-flex,
+.quiz-question-body .que .answer .flex-fill,
+.quiz-question-body .que .answer span,
+.quiz-question-body .que .answer p {
+  display: inline-block !important;
+  color: var(--color-text-primary, #111827) !important;
+  font-size: 0.98rem !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+}
+
+.quiz-question-body .que .answer .answernumber {
+  font-weight: 700;
+  color: var(--color-primary, #1a73e8);
+  margin-right: 0.25rem !important;
+}
+
+/* 6. Clean "Clear my choice" Styling */
+.quiz-question-body .que .clearchoice,
+.quiz-question-body .que [class*="clearchoice"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  margin-top: 0.5rem !important;
+  padding: 0.35rem 0.6rem !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 6px !important;
+  color: var(--color-text-secondary, #6b7280) !important;
+  font-size: 0.85rem !important;
+  cursor: pointer !important;
+  width: fit-content !important;
+}
+
+.quiz-question-body .que .clearchoice:hover,
+.quiz-question-body .que [class*="clearchoice"]:hover {
+  color: #dc2626 !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+
+/* Hide raw radio button inside Clear Choice */
+.quiz-question-body .que .clearchoice input[type="radio"],
+.quiz-question-body .que [class*="clearchoice"] input[type="radio"] {
+  display: none !important;
+}
+
+/* Input Text / Textarea */
+.quiz-question-body .que input[type="text"],
+.quiz-question-body .que textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-input, 8px);
+  background: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, rgba(0,0,0,0.08));
+  color: var(--color-text-primary, #111827);
+  font-family: inherit;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.quiz-question-body .que textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Feedback & Grade Info */
+.quiz-question-body .que .outcome,
+.quiz-question-body .que .rightanswer,
+.quiz-question-body .que .feedback {
+  margin-top: 1rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius-input, 8px);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #059669;
+}
+
+.quiz-question-body .que .outcome.incorrect {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #dc2626;
+}
+
+.quiz-question-body .que .im-controls,
+.quiz-question-body .que .submit {
+  display: none !important;
+}
+
+/* Action Buttons inside Quiz Cover/Runner */
+.quiz-cover-card .btn-primary,
+.quiz-runner-container .btn-primary {
+  width: fit-content !important;
+  min-width: 220px;
+  padding: 0.75rem 1.75rem !important;
+}
+
+/* Pagination Bar */
+.quiz-pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.25rem !important; /* Minimal gap */
+  padding-top: 0 !important;
+  gap: 1rem;
+}
+
+.quiz-pagination-bar button {
+  width: fit-content !important;
+  min-width: 180px;
+}
+
+/* Review View Header */
+.quiz-review-card {
+  padding: 2rem;
+  background: var(--color-surface, #ffffff) !important;
+  border: 1px solid var(--color-border, rgba(0,0,0,0.08)) !important;
+  border-radius: var(--radius-card, 12px);
+  margin-bottom: 1.5rem;
+}
+
+.quiz-grade-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  background: rgba(26, 115, 232, 0.08);
+  border: 1px solid rgba(26, 115, 232, 0.2);
+  border-radius: var(--radius-card, 12px);
+  margin: 1.5rem 0;
+}
+
+.quiz-grade-score {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--color-primary, #1a73e8);
+}
+
+/* Confirmation Modal Overlay */
+.quiz-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.quiz-modal-card {
+  width: 90%;
+  max-width: 480px;
+  padding: 2rem;
+  background: var(--color-surface, #ffffff) !important;
+  border: 1px solid var(--color-border, rgba(0,0,0,0.08)) !important;
+  border-radius: var(--radius-card, 12px);
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
+  text-align: center;
+}
+
+.quiz-modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.75rem;
+}
+
+.quiz-modal-actions button {
+  width: auto !important;
+  min-width: 140px;
+}
