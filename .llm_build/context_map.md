@@ -1,5 +1,5 @@
 # Project Context Map
-_Last updated: 2026-07-15T19:24:00-03:00_
+_Last updated: 2026-07-22T16:46:00-03:00_
 
 ## Tech Stack
 - Lenguajes: JavaScript (Vanilla/ES6), HTML, CSS, PHP (Moodle Plugin)
@@ -9,11 +9,12 @@ _Last updated: 2026-07-15T19:24:00-03:00_
 
 ## Arquitectura & Patrones
 - **Frontend**: SPA Vanilla JS con enrutador personalizado (`src/router/index.js`). Diseño modular con servicios (`src/services/`) y vistas (`src/views/`).
-- **Moodle Backend Integration**: Usa Web Services de Moodle mediante REST (JSON) y un plugin local personalizado (`local_headless`) para autologin y visualización optimizada de H5P.
+- **Moodle Backend Integration**: Usa Web Services de Moodle mediante REST (JSON) y un plugin local personalizado (`local_headless`) para autologin y visualización optimizada de H5P y foros.
 
 ## Entry Points & Key Files
 - [src/main.js](file:///Users/hectorteran/Documents/moodle_frontend/src/main.js) — Inicialización de rutas y aplicación. ⭐
 - [src/services/moodle-api.js](file:///Users/hectorteran/Documents/moodle_frontend/src/services/moodle-api.js) — Cliente para llamadas Web Services de Moodle. ⭐
+- [src/components/forum-viewer.js](file:///Users/hectorteran/Documents/moodle_frontend/src/components/forum-viewer.js) — Componente para visualización y respuesta de foros nativos. ⭐
 - [local_headless.zip](file:///Users/hectorteran/Documents/moodle_frontend/local_headless.zip) — Plugin Moodle necesario para el backend. ⭐
 
 ## Directory Structure & Signatures
@@ -22,6 +23,10 @@ _Last updated: 2026-07-15T19:24:00-03:00_
 - `services/auth.js`: Servicio de login (`AuthService.login`), token y persistencia en sessionStorage.
 - `services/moodle-api.js`: Cliente de llamadas API `MoodleApi.call` y token integration.
 - `services/courses.js`: Métodos para traer cursos y contenidos.
+- `services/forum.js`: `ForumService` para interactuar con discusiones y posts del foro.
+- `components/forum-viewer.js`: `createForumViewer({ mod, courseId })` para renderizado nativo de foros.
+- `components/course-carousel.js`: `createCourseCarousel(courses, onClick)` para renderizar carrusel horizontal.
+- `styles/carousel.css`: Estilos responsive de carrusel tipo Netflix.
 - `config/api.js`: Endpoint helper para Moodle REST.
 - `config/tenant.js`: Configuración dinámica del tenant y estilos visuales.
 
