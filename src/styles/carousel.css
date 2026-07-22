@@ -1,0 +1,107 @@
+.carousel-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.carousel-container {
+  overflow: hidden;
+  width: 100%;
+}
+
+.carousel-track {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.5rem 0.25rem;
+}
+
+/* Ocultar barra de scroll */
+.carousel-track::-webkit-scrollbar {
+  display: none;
+}
+.carousel-track {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Ancho de los elementos del carrusel */
+.carousel-track > .course-card {
+  flex: 0 0 280px; /* Ancho fijo para consistencia, o responsivo */
+  max-width: 100%;
+}
+
+@media (min-width: 480px) {
+  .carousel-track > .course-card {
+    flex: 0 0 calc(50% - 0.75rem); /* 2 items */
+  }
+}
+
+@media (min-width: 768px) {
+  .carousel-track > .course-card {
+    flex: 0 0 calc(33.333% - 1rem); /* 3 items */
+  }
+}
+
+@media (min-width: 1024px) {
+  .carousel-track > .course-card {
+    flex: 0 0 calc(25% - 1.125rem); /* 4 items */
+  }
+}
+
+/* Botones de navegación */
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  cursor: pointer;
+  border: none;
+  background: var(--bg, #fff);
+  color: var(--text-h, #08060d);
+  box-shadow: var(--shadow);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s, background-color 0.3s, transform 0.2s;
+  border: 1px solid var(--border);
+}
+
+.carousel-btn:hover {
+  background-color: var(--accent-bg);
+  color: var(--accent);
+  border-color: var(--accent-border);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-btn.prev {
+  left: -20px;
+}
+
+.carousel-btn.next {
+  right: -20px;
+}
+
+.carousel-btn.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Ocultar botones en mobile */
+@media (max-width: 767px) {
+  .carousel-btn {
+    display: none;
+  }
+  .carousel-track {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    width: calc(100% + 2rem);
+  }
+}

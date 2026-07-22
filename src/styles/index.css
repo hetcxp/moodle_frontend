@@ -4,6 +4,7 @@
 @import './dashboard.css';
 @import './extensions.css';
 @import './quiz.css';
+@import './carousel.css';
 
 :root {
   --color-primary: #1a73e8;

@@ -1,6 +1,7 @@
 import { CourseService } from '../services/courses.js';
 import { createHeader } from '../components/header.js';
 import { createCourseGrid } from '../components/course-grid.js';
+import { createCourseCarousel } from '../components/course-carousel.js';
 import { createLoader } from '../components/loader.js';
 import { createTabs } from '../components/tabs.js';
 import { createModal } from '../components/modal.js';
@@ -97,7 +98,7 @@ export async function renderDashboard(container) {
         catTitle.className = 'category-title';
         catTitle.textContent = category;
         content.appendChild(catTitle);
-        content.appendChild(createCourseGrid(courses, handleAvailableClick));
+        content.appendChild(createCourseCarousel(courses, handleAvailableClick));
       }
     }
     
