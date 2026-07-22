@@ -493,8 +493,11 @@ export async function renderCourse(container, courseId) {
           contentWrapper.appendChild(descDiv);
         }
 
-        // --- Archivos adjuntos: introfiles (WS) + mod.contents (fallback) ---
-        const wsFiles = (assignData && (assignData.introfiles || assignData.introattachments)) || [];
+        // --- Archivos adjuntos: introfiles (WS) + introattachments + mod.contents (fallback) ---
+        const wsFiles = [
+          ...(assignData && assignData.introfiles || []),
+          ...(assignData && assignData.introattachments || []),
+        ];
         const contentsFiles = (mod.contents || []).filter(c => c.type === 'file');
         // Merge sin duplicados por filename
         const seenNames = new Set();

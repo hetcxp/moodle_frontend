@@ -167,17 +167,33 @@ export const CourseService = {
 
 
   async getAssignmentData(courseId, cmId) {
-    try {
-      const result = await MoodleApi.call('mod_assign_get_assignments', {
-        'courseids[0]': courseId
-      });
-      if (result && result.courses && result.courses.length > 0) {
-        const assignment = (result.courses[0].assignments || []).find(a => a.cmid == cmId);
-        return assignment || null;
-      }
-    } catch (e) {
-      console.error(`Failed to fetch assignment data for cmId ${cmId}`, e);
+    const tryFetch = async (token) => {
+      try {
+        const url = new URL(import.meta.env.VITE_MOODLE_URL + '/webservice/rest/server.php');
+        url.searchParams.set('wstoken', token);
+        url.searchParams.set('wsfunction', 'mod_assign_get_assignments');
+        url.searchParams.set('moodlewsrestformat', 'json');
+        url.searchParams.set('courseids[0]', courseId);
+        const res = await fetch(url.toString(), { method: 'POST' });
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (data.exception || data.errorcode) return null;
+        if (data.courses && data.courses.length > 0) {
+          return (data.courses[0].assignments || []).find(a => a.cmid == cmId) || null;
+        }
+      } catch (e) { /* silent */ }
+      return null;
+    };
+
+    // Intento 1: token de usuario
+    const userToken = AuthService.getToken();
+    if (userToken) {
+      const result = await tryFetch(userToken);
+      if (result) return result;
     }
+    // Fallback: admin token
+    const adminToken = import.meta.env.VITE_MOODLE_ADMIN_TOKEN;
+    if (adminToken) return await tryFetch(adminToken);
     return null;
   },
 
