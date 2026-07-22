@@ -43,6 +43,16 @@ export const AuthService = {
     
     if (infoData.exception) throw new Error(infoData.message);
     
+    if (infoData.userisforcedpasswordchange) {
+      sessionStorage.setItem('moodle_temp_session', JSON.stringify({
+        token,
+        username,
+        userid: infoData.userid,
+        fullname: infoData.fullname
+      }));
+      throw { type: 'FORCE_PASSWORD_CHANGE' };
+    }
+    
     // Save session
     sessionStorage.setItem('moodle_token', token);
     
@@ -59,6 +69,16 @@ export const AuthService = {
   logout() {
     sessionStorage.removeItem('moodle_token');
     sessionStorage.removeItem('moodle_user');
+    this.clearTempSession();
     window.location.hash = '/login';
+  },
+
+  getTempSession() {
+    const sessionStr = sessionStorage.getItem('moodle_temp_session');
+    return sessionStr ? JSON.parse(sessionStr) : null;
+  },
+
+  clearTempSession() {
+    sessionStorage.removeItem('moodle_temp_session');
   }
 };

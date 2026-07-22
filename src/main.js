@@ -5,6 +5,7 @@ import { AuthService } from './services/auth.js';
 import { renderLogin } from './views/login.js';
 import { renderDashboard } from './views/dashboard.js';
 import { renderCourse } from './views/course.js';
+import { renderChangePassword } from './views/change-password.js';
 
 const appContainer = document.getElementById('app');
 
@@ -41,6 +42,17 @@ const routes = [
       return true;
     },
     action: (params) => renderCourse(appContainer, params.id)
+  },
+  {
+    path: '/change-password',
+    guard: () => {
+      if (!AuthService.getTempSession()) {
+        window.location.hash = AuthService.isAuthenticated() ? '/dashboard' : '/login';
+        return false;
+      }
+      return true;
+    },
+    action: () => renderChangePassword(appContainer)
   },
   {
     path: '*', // Fallback

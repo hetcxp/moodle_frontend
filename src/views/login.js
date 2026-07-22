@@ -52,6 +52,10 @@ export function renderLogin(container) {
       await AuthService.login(user, pass);
       window.location.hash = '/dashboard';
     } catch (err) {
+      if (err.type === 'FORCE_PASSWORD_CHANGE') {
+        window.location.hash = '/change-password';
+        return;
+      }
       errorDiv.textContent = err.message || 'Error de autenticación';
       errorDiv.classList.add('show');
     } finally {
