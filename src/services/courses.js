@@ -165,7 +165,24 @@ export const CourseService = {
     return null;
   },
 
+
+  async getAssignmentData(courseId, cmId) {
+    try {
+      const result = await MoodleApi.call('mod_assign_get_assignments', {
+        'courseids[0]': courseId
+      });
+      if (result && result.courses && result.courses.length > 0) {
+        const assignment = (result.courses[0].assignments || []).find(a => a.cmid == cmId);
+        return assignment || null;
+      }
+    } catch (e) {
+      console.error(`Failed to fetch assignment data for cmId ${cmId}`, e);
+    }
+    return null;
+  },
+
   async fetchFileContent(fileUrl) {
+
     const token = AuthService.getToken();
     if (!token || !fileUrl) return null;
     

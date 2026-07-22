@@ -477,7 +477,70 @@ export async function renderCourse(container, courseId) {
         contentWrapper.appendChild(bookSidebar);
         contentWrapper.appendChild(bookContent);
 
+      } else if (mod.modname === 'assign') {
+        contentWrapper.className = 'resource-content assign-content';
+
+        // Fetch assign data con admin token (introfiles, intro, etc.)
+        const assignData = await CourseService.getAssignmentData(courseId, mod.id);
+
+        // --- Description ---
+        const description = (assignData && assignData.intro) || mod.description || mod.intro || '';
+        if (description) {
+          const descDiv = document.createElement('div');
+          descDiv.className = 'assign-description';
+          descDiv.style.cssText = 'margin-bottom: 1.5rem; padding: 1.5rem; background: var(--color-surface); border-radius: 8px; border: 1px solid var(--color-border); line-height: 1.7;';
+          descDiv.innerHTML = replacePluginfileUrls(description);
+          contentWrapper.appendChild(descDiv);
+        }
+
+        // --- Archivos adjuntos: introfiles (WS) + mod.contents (fallback) ---
+        const wsFiles = (assignData && (assignData.introfiles || assignData.introattachments)) || [];
+        const contentsFiles = (mod.contents || []).filter(c => c.type === 'file');
+        // Merge sin duplicados por filename
+        const seenNames = new Set();
+        const allFiles = [...wsFiles, ...contentsFiles].filter(f => {
+          if (seenNames.has(f.filename)) return false;
+          seenNames.add(f.filename);
+          return true;
+        });
+
+        if (allFiles.length > 0) {
+          const attachTitle = document.createElement('h3');
+          attachTitle.textContent = 'Archivos adjuntos';
+          attachTitle.style.cssText = 'font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem;';
+          contentWrapper.appendChild(attachTitle);
+
+          const fileList = document.createElement('ul');
+          fileList.style.cssText = 'list-style: none; padding: 0; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem;';
+          allFiles.forEach(f => {
+            const li = document.createElement('li');
+            const token = AuthService.getToken();
+            const fileUrl = f.fileurl + (f.fileurl.includes('?') ? '&' : '?') + `token=${token}`;
+            li.innerHTML = `<a href="${fileUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.5rem 1rem;background:var(--color-surface);border:1px solid var(--color-border);border-radius:6px;text-decoration:none;color:var(--color-primary);font-size:0.875rem;font-weight:500;">📎 ${f.filename}</a>`;
+            fileList.appendChild(li);
+          });
+          contentWrapper.appendChild(fileList);
+        }
+
+        // --- Botón de envío con autologin ---
+        const statusDiv = document.createElement('div');
+        statusDiv.style.cssText = 'margin-top: 0.5rem;';
+        const submitBtn = document.createElement('button');
+        submitBtn.className = 'btn-primary';
+        submitBtn.textContent = 'Ir a enviar tarea →';
+        submitBtn.onclick = async () => {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Abriendo...';
+          const url = await CourseService.getAutoLoginUrl(mod.url);
+          window.open(url, '_blank');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Ir a enviar tarea →';
+        };
+        statusDiv.appendChild(submitBtn);
+        contentWrapper.appendChild(statusDiv);
+
       } else if (mod.url) {
+
         const iframe = document.createElement('iframe');
         let embedUrl = mod.url;
         
