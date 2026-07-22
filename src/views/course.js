@@ -115,9 +115,10 @@ export async function renderCourse(container, courseId) {
     };
     window.addEventListener('message', window.h5pMessageListener);
 
-    // Sidebar
+    // Sidebar — oculta por defecto para evitar flash antes de renderMainContent(-1)
     const sidebar = document.createElement('aside');
     sidebar.className = 'course-sidebar';
+    sidebar.style.display = 'none';
 
     const backBtn = document.createElement('button');
     backBtn.className = 'btn-secondary';
@@ -541,6 +542,11 @@ export async function renderCourse(container, courseId) {
         };
         statusDiv.appendChild(submitBtn);
         contentWrapper.appendChild(statusDiv);
+
+      } else if (mod.modname === 'forum') {
+        contentWrapper.className = 'resource-content forum-content';
+        const { createForumViewer } = await import('../components/forum-viewer.js');
+        contentWrapper.appendChild(createForumViewer({ mod, courseId }));
 
       } else if (mod.url) {
 

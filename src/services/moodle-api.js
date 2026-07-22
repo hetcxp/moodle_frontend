@@ -3,6 +3,7 @@ import { AuthService } from './auth.js';
 
 export const MoodleApi = {
   async call(wsfunction, params = {}, customToken = null) {
+    const isUsingUserToken = !customToken;
     const token = customToken || AuthService.getToken();
     if (!token) throw new Error('Not authenticated');
 
@@ -13,7 +14,8 @@ export const MoodleApi = {
     
     const data = await res.json();
     if (data.exception) {
-      if (data.errorcode === 'invalidtoken') {
+      // Solo cerrar sesión si el token fallido es el del usuario, no un customToken (ej. admin)
+      if (data.errorcode === 'invalidtoken' && isUsingUserToken) {
         AuthService.logout();
       }
       throw new Error(data.message || 'API Error');
