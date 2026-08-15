@@ -1,6 +1,5 @@
 import { CourseService } from '../services/courses.js';
 import { createHeader } from '../components/header.js';
-import { createCourseGrid } from '../components/course-grid.js';
 import { createCourseCarousel } from '../components/course-carousel.js';
 import { createLoader } from '../components/loader.js';
 import { createTabs } from '../components/tabs.js';
@@ -73,8 +72,8 @@ export async function renderDashboard(container) {
     content.appendChild(enrolledTitle);
     
     const tabsData = [
-      { id: 'activos', label: 'Cursos Activos', content: createCourseGrid(data.active, handleEnrolledClick) },
-      { id: 'terminados', label: 'Cursos Terminados', content: createCourseGrid(data.completed, handleEnrolledClick) }
+      { id: 'activos', label: 'Cursos Activos', content: createCourseCarousel(data.active, handleEnrolledClick) },
+      { id: 'terminados', label: 'Cursos Terminados', content: createCourseCarousel(data.completed, handleEnrolledClick) }
     ];
     
     const tabsComponent = createTabs(tabsData);

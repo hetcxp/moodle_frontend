@@ -548,6 +548,19 @@ export async function renderCourse(container, courseId) {
         const { createForumViewer } = await import('../components/forum-viewer.js');
         contentWrapper.appendChild(createForumViewer({ mod, courseId }));
 
+      } else if (mod.modname === 'customcert') {
+        contentWrapper.className = 'resource-content cert-content';
+        const [{ createCertViewer }, { CertService }] = await Promise.all([
+          import('../components/cert-viewer.js'),
+          import('../services/cert.js')
+        ]);
+        const [certs, issuances] = await Promise.all([
+          CertService.getCertsByCoures(courseId),
+          CertService.getIssuances(mod.instance)
+        ]);
+        const certData = certs.find(c => c.coursemodule == mod.id) || null;
+        contentWrapper.appendChild(createCertViewer({ mod, certData, issuances, courseId }));
+
       } else if (mod.url) {
 
         const iframe = document.createElement('iframe');
@@ -748,8 +761,20 @@ export async function renderCourse(container, courseId) {
     content.appendChild(sidebar);
     content.appendChild(mainArea);
 
-    // Initial render: show course outline or first module if preferred
-    renderMainContent(-1);
+    // Initial render: auto-enter scorm/quiz when applicable, else show outline
+    const firstMod  = allModules[0];
+    const secondMod = allModules[1];
+
+    const isSingleScorm = firstMod?.modname === 'scorm';
+    const isForumQuiz   = firstMod?.modname === 'forum' && secondMod?.modname === 'quiz';
+
+    if (isSingleScorm) {
+      renderMainContent(0);
+    } else if (isForumQuiz) {
+      renderMainContent(1);
+    } else {
+      renderMainContent(-1);
+    }
 
   } catch (err) {
     content.innerHTML = `
