@@ -1,1 +1,0 @@
-if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/moodle_frontend/sw.js', { scope: '/moodle_frontend/' })})}
