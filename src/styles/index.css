@@ -52,3 +52,25 @@ button {
   display: flex;
   flex-direction: column;
 }
+
+/* Smart Resume Feature */
+.module-item.smart-resume-active {
+  border: 2px solid var(--color-primary);
+  background-color: var(--color-bg-hover);
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.15);
+}
+
+.smart-resume-badge {
+  display: inline-block;
+  background-color: var(--color-primary);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  margin-left: auto;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}

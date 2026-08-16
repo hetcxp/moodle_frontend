@@ -171,6 +171,12 @@ export async function renderCourse(container, courseId) {
 
       refreshSidebarBadges();
 
+      // Find first incomplete module for Smart Resume
+      const firstIncompleteIndex = allModules.findIndex(m => {
+        const comp = completionMap[m.id];
+        return comp && comp.hascompletion && !comp.isoverallcomplete;
+      });
+
       if (modIndex === -1) {
         // Show course outline / summary
         const title = document.createElement('h2');
@@ -192,14 +198,19 @@ export async function renderCourse(container, courseId) {
               const gmodIndex = allModules.findIndex(m => m.id === mod.id);
               const comp = completionMap[mod.id];
               const isDone = comp && comp.isoverallcomplete;
+              const isSmartResume = gmodIndex === firstIncompleteIndex;
+              
               const li = document.createElement('li');
-              li.className = 'module-item';
+              li.className = isSmartResume ? 'module-item smart-resume-active' : 'module-item';
+              if (isSmartResume) li.id = 'smart-resume-target';
+              
               li.innerHTML = `
                 <span class="module-icon-wrap">
                   <img src="${mod.modicon}" alt="${mod.modname}" class="module-icon">
                   ${isDone ? '<span class="completion-overlay" title="Completado">✓</span>' : ''}
                 </span>
                 <span>${mod.name}</span>
+                ${isSmartResume ? '<span class="smart-resume-badge">Siguiente Actividad</span>' : ''}
               `;
               li.onclick = () => renderMainContent(gmodIndex);
               modsList.appendChild(li);
@@ -209,6 +220,15 @@ export async function renderCourse(container, courseId) {
           
           mainArea.appendChild(topicDiv);
         });
+
+        // Auto-scroll to Smart Resume target
+        setTimeout(() => {
+          const target = document.getElementById('smart-resume-target');
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+
         return;
       }
 
