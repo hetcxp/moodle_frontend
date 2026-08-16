@@ -1,1 +1,25 @@
-if(!self.define){let e,i={};const n=(n,r)=>(n=new URL(n+".js",r).href,i[n]||new Promise(i=>{if("document"in self){const e=document.createElement("script");e.src=n,e.onload=i,document.head.appendChild(e)}else e=n,importScripts(n),i()}).then(()=>{let e=i[n];if(!e)throw new Error(`Module ${n} didn’t register its module`);return e}));self.define=(r,s)=>{const c=e||("document"in self?document.currentScript.src:"")||location.href;if(i[c])return;let o={};const d=e=>n(e,c),l={module:{uri:c},exports:o,require:d};i[c]=Promise.all(r.map(e=>l[e]||d(e))).then(e=>(s(...e),o))}}define(["./workbox-9c191d2f"],function(e){"use strict";self.skipWaiting(),e.clientsClaim(),e.precacheAndRoute([{url:"registerSW.js",revision:"cde971dbd4892d6b672f803254e3b5db"},{url:"pwa-64x64.png",revision:"960cdf5a1c759cf031009f4f18713788"},{url:"pwa-512x512.png",revision:"cd21f25a01f564d90c8de20a01e69d29"},{url:"pwa-192x192.png",revision:"b4651d934324dba38cd70e9c8017f407"},{url:"maskable-icon-512x512.png",revision:"387297121a84acba292639241fca9c2a"},{url:"index.html",revision:"4011058b17f25a5f9c6975966cbd75cd"},{url:"icons.svg",revision:"3b4fcfcf393eca4d264dca4a4663bc37"},{url:"generic-course.svg",revision:"145a4d8aa00ee4f1a85221d47a274e43"},{url:"generic-course-clean.svg",revision:"d41d8cd98f00b204e9800998ecf8427e"},{url:"favicon.svg",revision:"098c888910dd3b64d291f1f0dc9e7033"},{url:"favicon.ico",revision:"c486e742b86d903a391d1a5fccbd9198"},{url:"apple-touch-icon-180x180.png",revision:"88db9778b51bfd138b8e7ac217a0d4e1"},{url:"assets/index-CjdAaZWH.css",revision:null},{url:"assets/index-BGsncfXw.js",revision:null},{url:"assets/forum-viewer-D5LnpcS3.js",revision:null},{url:"assets/cert-viewer-Br5KnwBs.js",revision:null},{url:"assets/cert-CCxroXXg.js",revision:null},{url:"maskable-icon-512x512.png",revision:"387297121a84acba292639241fca9c2a"},{url:"pwa-192x192.png",revision:"b4651d934324dba38cd70e9c8017f407"},{url:"pwa-512x512.png",revision:"cd21f25a01f564d90c8de20a01e69d29"},{url:"manifest.webmanifest",revision:"dbbe89b6c5c386cfdbf24edb8cf79c45"}],{}),e.cleanupOutdatedCaches(),e.registerRoute(new e.NavigationRoute(e.createHandlerBoundToURL("/moodle_frontend/index.html"),{allowlist:[/^\/moodle_frontend\//]}))});
+
+self.addEventListener('install', (e) => {
+  self.skipWaiting();
+});
+self.addEventListener('activate', (e) => {
+  self.registration.unregister()
+    .then(() => self.clients.matchAll())
+    .then((clients) => {
+      clients.forEach((client) => {
+        if (client instanceof WindowClient)
+          client.navigate(client.url);
+      });
+      return Promise.resolve();
+    })
+    .then(() => {
+      self.caches.keys().then((cacheNames) => {
+        Promise.all(
+          cacheNames.map((cacheName) => {
+            return self.caches.delete(cacheName);
+          }),
+        );
+      })
+    });
+});
+    
