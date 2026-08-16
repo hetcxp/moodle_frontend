@@ -584,6 +584,62 @@ export async function renderCourse(container, courseId) {
         const certData = certs.find(c => c.coursemodule == mod.id) || null;
         contentWrapper.appendChild(createCertViewer({ mod, certData, issuances, courseId }));
 
+      } else if (mod.modname === 'resource') {
+        contentWrapper.className = 'resource-content file-content';
+        if (mod.contents && mod.contents.length > 0) {
+          const file = mod.contents.find(c => c.type === 'file');
+          if (file) {
+            const token = AuthService.getToken();
+            const fileUrl = file.fileurl + (file.fileurl.includes('?') ? '&' : '?') + `token=${token}`;
+            
+            if (file.mimetype === 'application/pdf') {
+              const iframe = document.createElement('iframe');
+              iframe.className = 'resource-content pdf-iframe';
+              iframe.src = fileUrl;
+              iframe.style.width = '100%';
+              iframe.style.minHeight = '80vh';
+              iframe.style.border = 'none';
+              contentWrapper.appendChild(iframe);
+            } else if (file.mimetype && file.mimetype.startsWith('image/')) {
+              const img = document.createElement('img');
+              img.src = fileUrl;
+              img.style.maxWidth = '100%';
+              img.style.height = 'auto';
+              img.style.display = 'block';
+              img.style.margin = '0 auto';
+              contentWrapper.appendChild(img);
+            } else if (file.mimetype && file.mimetype.startsWith('video/')) {
+              const video = document.createElement('video');
+              video.src = fileUrl;
+              video.controls = true;
+              video.style.maxWidth = '100%';
+              video.style.display = 'block';
+              video.style.margin = '0 auto';
+              contentWrapper.appendChild(video);
+            } else if (file.mimetype && file.mimetype.startsWith('audio/')) {
+              const audio = document.createElement('audio');
+              audio.src = fileUrl;
+              audio.controls = true;
+              audio.style.display = 'block';
+              audio.style.margin = '2rem auto';
+              contentWrapper.appendChild(audio);
+            } else {
+              contentWrapper.innerHTML = `
+                <div style="text-align: center; padding: 2rem;">
+                  <p>Este archivo no se puede previsualizar directamente.</p>
+                  <a href="${fileUrl}" target="_blank" rel="noopener" class="btn-primary" style="display:inline-block; margin-top: 1rem;">
+                    Descargar / Abrir ${file.filename}
+                  </a>
+                </div>
+              `;
+            }
+          } else {
+             contentWrapper.innerHTML = '<p class="empty-state">No se encontró ningún archivo en este recurso.</p>';
+          }
+        } else {
+          contentWrapper.innerHTML = '<p class="empty-state">Este recurso no tiene contenido disponible.</p>';
+        }
+
       } else if (mod.url) {
 
         const iframe = document.createElement('iframe');
