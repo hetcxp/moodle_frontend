@@ -4,6 +4,7 @@ export default {
   base: '/moodle_frontend/',
   plugins: [
     VitePWA({
+      selfDestroying: true,
       registerType: 'autoUpdate',
       scope: '/moodle_frontend/',
       workbox: {

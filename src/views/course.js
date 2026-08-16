@@ -393,6 +393,9 @@ export async function renderCourse(container, courseId) {
             renderBookSidebar();
             bookContent.innerHTML = '<div style="text-align:center; padding: 2rem;">Cargando capítulo...</div>';
             
+            window.scrollTo(0, 0);
+            if (typeof mainArea !== 'undefined') mainArea.scrollTo(0, 0);
+            
             const chap = validChapters[idx];
             let html = htmlCache[idx];
             
@@ -616,6 +619,7 @@ export async function renderCourse(container, courseId) {
             iframe.src = autologinUrl;
           });
         }
+
       } else {
         contentWrapper.innerHTML = '<p class="empty-state">Este recurso no se puede visualizar directamente.</p>';
       }
