@@ -42,6 +42,16 @@ export const CourseService = {
     const active = enrolled.filter(c => !(c.completed === true || c.completed === 1 || c.progress === 100));
     const completed = enrolled.filter(c => (c.completed === true || c.completed === 1 || c.progress === 100));
     
+    // Ordenar activos por último acceso (más reciente primero)
+    active.sort((a, b) => (b.lastaccess || 0) - (a.lastaccess || 0));
+    
+    // Ordenar terminados por fecha de término (más reciente primero), fallback a lastaccess
+    completed.sort((a, b) => {
+      const timeA = a.timecompleted || a.lastaccess || 0;
+      const timeB = b.timecompleted || b.lastaccess || 0;
+      return timeB - timeA;
+    });
+    
     const availableRaw = all.filter(c => !enrolledIds.has(c.id));
     
     // Group available by category

@@ -2,7 +2,6 @@ import { CourseService } from '../services/courses.js';
 import { createHeader } from '../components/header.js';
 import { createCourseCarousel } from '../components/course-carousel.js';
 import { createLoader } from '../components/loader.js';
-import { createTabs } from '../components/tabs.js';
 import { createModal } from '../components/modal.js';
 
 export async function renderDashboard(container) {
@@ -65,19 +64,24 @@ export async function renderDashboard(container) {
       }
     };
     
-    // Mis Cursos
+    // Mis Cursos Activos
     const enrolledTitle = document.createElement('h2');
     enrolledTitle.className = 'section-title';
-    enrolledTitle.textContent = 'Mis Cursos';
+    enrolledTitle.textContent = 'Mis Cursos Activos';
     content.appendChild(enrolledTitle);
     
-    const tabsData = [
-      { id: 'activos', label: 'Cursos Activos', content: createCourseCarousel(data.active, handleEnrolledClick) },
-      { id: 'terminados', label: 'Cursos Terminados', content: createCourseCarousel(data.completed, handleEnrolledClick) }
-    ];
-    
-    const tabsComponent = createTabs(tabsData);
-    content.appendChild(tabsComponent);
+    content.appendChild(createCourseCarousel(data.active, handleEnrolledClick));
+
+    // Cursos Terminados
+    if (data.completed && data.completed.length > 0) {
+      const completedTitle = document.createElement('h2');
+      completedTitle.className = 'section-title';
+      completedTitle.textContent = 'Cursos Terminados';
+      completedTitle.style.marginTop = '2rem';
+      content.appendChild(completedTitle);
+      
+      content.appendChild(createCourseCarousel(data.completed, handleEnrolledClick));
+    }
     
     // Cursos Disponibles
     const availableTitle = document.createElement('h2');
