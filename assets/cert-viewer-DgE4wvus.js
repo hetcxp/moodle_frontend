@@ -1,4 +1,4 @@
-import{CertService as e}from"./cert-BWLlXQia.js";function t({mod:t,certData:n,issuances:r,courseId:i}){let a=Array.isArray(r)&&r.length>0,o=document.createElement(`div`);o.className=`cert-viewer`,o.style.cssText=`
+import{CertService as e}from"./cert-B3L7VX3A.js";function t({mod:t,certData:n,issuances:r,courseId:i}){let a=Array.isArray(r)&&r.length>0,o=document.createElement(`div`);o.className=`cert-viewer`,o.style.cssText=`
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
