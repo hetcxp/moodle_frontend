@@ -3,6 +3,7 @@ import { createHeader } from '../components/header.js';
 import { createLoader } from '../components/loader.js';
 import { createQuizRunner } from '../components/quiz-runner.js';
 import { replacePluginfileUrls, replaceRelativeImages } from '../utils/image.js';
+import { sanitizeHtml, escapeHtml } from '../utils/sanitize.js';
 import { API_CONFIG } from '../config/api.js';
 import { AuthService } from '../services/auth.js';
 
@@ -141,8 +142,8 @@ export async function renderCourse(container, courseId) {
       currentUpdateCompletionCard = null;
       
       // Asegurar que la vista vuelve al inicio del contenido nuevo
-      mainArea.scrollTo(0, 0);
-      window.scrollTo(0, 0);
+      if (typeof mainArea.scrollTo === 'function') mainArea.scrollTo(0, 0);
+      if (typeof window.scrollTo === 'function') window.scrollTo(0, 0);
 
       try {
         completionMap = await CourseService.getActivitiesCompletionStatus(courseId);
@@ -186,9 +187,9 @@ export async function renderCourse(container, courseId) {
         contents.forEach(topic => {
           const topicDiv = document.createElement('div');
           topicDiv.className = 'course-topic';
-          topicDiv.innerHTML = `<h3>${topic.name}</h3>`;
+          topicDiv.innerHTML = `<h3>${escapeHtml(topic.name)}</h3>`;
           if (topic.summary) {
-            topicDiv.innerHTML += `<div class="topic-summary">${replacePluginfileUrls(topic.summary)}</div>`;
+            topicDiv.innerHTML += `<div class="topic-summary">${sanitizeHtml(replacePluginfileUrls(topic.summary))}</div>`;
           }
           
           if (topic.modules && topic.modules.length > 0) {
@@ -209,7 +210,7 @@ export async function renderCourse(container, courseId) {
                   <img src="${mod.modicon}" alt="${mod.modname}" class="module-icon">
                   ${isDone ? '<span class="completion-overlay" title="Completado">✓</span>' : ''}
                 </span>
-                <span>${mod.name}</span>
+                <span>${escapeHtml(mod.name)}</span>
                 ${isSmartResume ? '<span class="smart-resume-badge">Siguiente Actividad</span>' : ''}
               `;
               li.onclick = () => renderMainContent(gmodIndex);
@@ -274,7 +275,7 @@ export async function renderCourse(container, courseId) {
         const pageContent = await CourseService.getPageContent(courseId, mod.id);
         if (pageContent) {
           contentWrapper.className = 'resource-content page-content';
-          contentWrapper.innerHTML = replacePluginfileUrls(pageContent.content || pageContent.intro);
+          contentWrapper.innerHTML = sanitizeHtml(replacePluginfileUrls(pageContent.content || pageContent.intro));
         } else {
           contentWrapper.innerHTML = '<p class="empty-state">No se pudo cargar el contenido.</p>';
         }
@@ -285,7 +286,7 @@ export async function renderCourse(container, courseId) {
         if (mod.description) {
           scormHtml += `
             <div class="scorm-description" style="margin-bottom: 2rem; text-align: left;">
-              ${replacePluginfileUrls(mod.description)}
+              ${sanitizeHtml(replacePluginfileUrls(mod.description))}
             </div>
           `;
         }
@@ -393,8 +394,8 @@ export async function renderCourse(container, courseId) {
             renderBookSidebar();
             bookContent.innerHTML = '<div style="text-align:center; padding: 2rem;">Cargando capítulo...</div>';
             
-            window.scrollTo(0, 0);
-            if (typeof mainArea !== 'undefined') mainArea.scrollTo(0, 0);
+            if (typeof window.scrollTo === 'function') window.scrollTo(0, 0);
+            if (typeof mainArea !== 'undefined' && typeof mainArea.scrollTo === 'function') mainArea.scrollTo(0, 0);
             
             const chap = validChapters[idx];
             let html = htmlCache[idx];
@@ -407,7 +408,7 @@ export async function renderCourse(container, courseId) {
             if (html) {
               let finalHtml = replacePluginfileUrls(html);
               finalHtml = replaceRelativeImages(finalHtml, mod.contents);
-              bookContent.innerHTML = finalHtml;
+              bookContent.innerHTML = sanitizeHtml(finalHtml);
             } else {
               bookContent.innerHTML = '<p class="empty-state">No se pudo cargar el capítulo.</p>';
             }
@@ -513,7 +514,7 @@ export async function renderCourse(container, courseId) {
           const descDiv = document.createElement('div');
           descDiv.className = 'assign-description';
           descDiv.style.cssText = 'margin-bottom: 1.5rem; padding: 1.5rem; background: var(--color-surface); border-radius: 8px; border: 1px solid var(--color-border); line-height: 1.7;';
-          descDiv.innerHTML = replacePluginfileUrls(description);
+          descDiv.innerHTML = sanitizeHtml(replacePluginfileUrls(description));
           contentWrapper.appendChild(descDiv);
         }
 
@@ -657,7 +658,7 @@ export async function renderCourse(container, courseId) {
               const descDiv = document.createElement('div');
               descDiv.className = 'h5p-description';
               descDiv.style.cssText = 'margin-bottom: 1.5rem; padding: 1.5rem; background: var(--color-surface); border-radius: 8px; border: 1px solid var(--color-border); line-height: 1.6;';
-              descDiv.innerHTML = replacePluginfileUrls(intro);
+              descDiv.innerHTML = sanitizeHtml(replacePluginfileUrls(intro));
               contentWrapper.insertBefore(descDiv, iframe);
             }
           });
@@ -864,4 +865,11 @@ export async function renderCourse(container, courseId) {
       </div>
     `;
   }
+
+  return () => {
+    if (window.h5pMessageListener) {
+      window.removeEventListener('message', window.h5pMessageListener);
+      window.h5pMessageListener = null;
+    }
+  };
 }

@@ -3,6 +3,7 @@ import { createHeader } from '../components/header.js';
 import { createCourseCarousel } from '../components/course-carousel.js';
 import { createLoader } from '../components/loader.js';
 import { createModal } from '../components/modal.js';
+import { sanitizeHtml, escapeHtml } from '../utils/sanitize.js';
 
 export async function renderDashboard(container) {
   // Skeleton / Loader initial
@@ -24,8 +25,9 @@ export async function renderDashboard(container) {
     };
 
     const handleAvailableClick = async (course) => {
+      const cleanSummary = sanitizeHtml(course.summary || '') || 'Sin descripción disponible.';
       const modalBody = document.createElement('div');
-      modalBody.innerHTML = `<p>${course.summary || 'Sin descripción disponible.'}</p><div class="loader-small">Cargando estructura...</div>`;
+      modalBody.innerHTML = `<div class="modal-description">${cleanSummary}</div><div class="loader-small">Cargando estructura...</div>`;
       const modal = createModal(course.fullname, modalBody);
       document.body.appendChild(modal);
 
@@ -36,11 +38,11 @@ export async function renderDashboard(container) {
         if (contents.length > 0) {
           structureHtml += '<ul class="modal-structure-list">';
           contents.forEach(topic => {
-            structureHtml += `<li><strong>${topic.name}</strong>`;
+            structureHtml += `<li><strong>${escapeHtml(topic.name)}</strong>`;
             if (topic.modules && topic.modules.length > 0) {
               structureHtml += '<ul>';
               topic.modules.forEach(mod => {
-                structureHtml += `<li>${mod.name}</li>`;
+                structureHtml += `<li>${escapeHtml(mod.name)}</li>`;
               });
               structureHtml += '</ul>';
             }
@@ -52,25 +54,29 @@ export async function renderDashboard(container) {
         }
 
         modalBody.innerHTML = `
-          <div class="modal-description">${course.summary || 'Sin descripción disponible.'}</div>
+          <div class="modal-description">${cleanSummary}</div>
           <h4 class="modal-section-title">Estructura del curso</h4>
           ${structureHtml}
         `;
       } catch (e) {
         modalBody.innerHTML = `
-          <div class="modal-description">${course.summary || 'Sin descripción disponible.'}</div>
+          <div class="modal-description">${cleanSummary}</div>
           <p class="error">Error al cargar la estructura del curso.</p>
         `;
       }
     };
     
+    const carousels = [];
+
     // Mis Cursos Activos
     const enrolledTitle = document.createElement('h2');
     enrolledTitle.className = 'section-title';
     enrolledTitle.textContent = 'Mis Cursos Activos';
     content.appendChild(enrolledTitle);
     
-    content.appendChild(createCourseCarousel(data.active, handleEnrolledClick));
+    const activeCarousel = createCourseCarousel(data.active, handleEnrolledClick);
+    carousels.push(activeCarousel);
+    content.appendChild(activeCarousel);
 
     // Cursos Terminados
     if (data.completed && data.completed.length > 0) {
@@ -80,7 +86,9 @@ export async function renderDashboard(container) {
       completedTitle.style.marginTop = '2rem';
       content.appendChild(completedTitle);
       
-      content.appendChild(createCourseCarousel(data.completed, handleEnrolledClick));
+      const completedCarousel = createCourseCarousel(data.completed, handleEnrolledClick);
+      carousels.push(completedCarousel);
+      content.appendChild(completedCarousel);
     }
     
     // Cursos Disponibles
@@ -101,9 +109,18 @@ export async function renderDashboard(container) {
         catTitle.className = 'category-title';
         catTitle.textContent = category;
         content.appendChild(catTitle);
-        content.appendChild(createCourseCarousel(courses, handleAvailableClick));
+        
+        const catCarousel = createCourseCarousel(courses, handleAvailableClick);
+        carousels.push(catCarousel);
+        content.appendChild(catCarousel);
       }
     }
+
+    return () => {
+      carousels.forEach(c => {
+        if (typeof c?.destroy === 'function') c.destroy();
+      });
+    };
     
   } catch (err) {
     content.innerHTML = `

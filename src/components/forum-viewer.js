@@ -1,5 +1,6 @@
 import { ForumService } from '../services/forum.js';
 import { replacePluginfileUrls } from '../utils/image.js';
+import { sanitizeHtml, escapeHtml } from '../utils/sanitize.js';
 
 /**
  * Renderiza un foro de Moodle de forma nativa.
@@ -98,7 +99,7 @@ export function createForumViewer({ mod, courseId }) {
       const meta = document.createElement('div');
       meta.className = 'forum-discussion-meta';
       meta.innerHTML = `
-        <span class="forum-author">${disc.userfullname || disc.author || 'Anónimo'}</span>
+        <span class="forum-author">${escapeHtml(disc.userfullname || disc.author || 'Anónimo')}</span>
         <span class="forum-dot">·</span>
         <span class="forum-date">${relativeTime(disc.timemodified || disc.timecreated || 0)}</span>
         <span class="forum-dot">·</span>
@@ -141,9 +142,9 @@ export function createForumViewer({ mod, courseId }) {
     const header = document.createElement('div');
     header.className = 'forum-thread-header';
     header.innerHTML = `
-      <h3 class="forum-thread-title">${disc.name || disc.subject || '(Sin título)'}</h3>
+      <h3 class="forum-thread-title">${escapeHtml(disc.name || disc.subject || '(Sin título)')}</h3>
       <p class="forum-thread-meta">
-        Iniciado por <strong>${disc.userfullname || disc.author || 'Anónimo'}</strong>
+        Iniciado por <strong>${escapeHtml(disc.userfullname || disc.author || 'Anónimo')}</strong>
         · ${relativeTime(disc.timecreated || disc.timemodified || 0)}
       </p>
     `;
@@ -168,14 +169,14 @@ export function createForumViewer({ mod, courseId }) {
       const postMeta = document.createElement('div');
       postMeta.className = 'forum-post-meta';
       postMeta.innerHTML = `
-        <span class="forum-author">${post.author?.fullname || post.userfullname || 'Anónimo'}</span>
+        <span class="forum-author">${escapeHtml(post.author?.fullname || post.userfullname || 'Anónimo')}</span>
         <span class="forum-dot">·</span>
         <span class="forum-date">${relativeTime(post.timecreated || 0)}</span>
       `;
 
       const postBody = document.createElement('div');
       postBody.className = 'forum-post-body';
-      postBody.innerHTML = replacePluginfileUrls(post.message || '');
+      postBody.innerHTML = sanitizeHtml(replacePluginfileUrls(post.message || ''));
 
       // Reply button
       const replyBtn = document.createElement('button');

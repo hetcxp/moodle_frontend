@@ -88,8 +88,9 @@ export function createCourseCarousel(courses, onClick) {
   });
 
   // Observador para actualizar cuando las dimensiones cambien
+  let resizeObserver = null;
   if (window.ResizeObserver) {
-    const resizeObserver = new ResizeObserver(() => {
+    resizeObserver = new ResizeObserver(() => {
       updateButtons();
     });
     resizeObserver.observe(track);
@@ -97,6 +98,13 @@ export function createCourseCarousel(courses, onClick) {
 
   // Ejecución inicial después de un breve delay
   setTimeout(updateButtons, 100);
+
+  wrapper.destroy = () => {
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+      resizeObserver = null;
+    }
+  };
 
   return wrapper;
 }

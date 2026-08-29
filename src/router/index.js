@@ -2,9 +2,14 @@ export class Router {
   constructor(routes) {
     this.routes = routes;
     this.currentRoute = null;
+    this.currentCleanup = null;
     
-    window.addEventListener('hashchange', () => this.handleHashChange());
-    window.addEventListener('load', () => this.handleHashChange());
+    this._onHashChange = () => this.handleHashChange();
+    window.addEventListener('hashchange', this._onHashChange);
+    window.addEventListener('load', this._onHashChange);
+    
+    // Process initial route immediately since module scripts might load after 'load' event
+    this.handleHashChange();
   }
 
   handleHashChange() {
@@ -41,12 +46,52 @@ export class Router {
       if (matchRoute.guard && !matchRoute.guard()) {
         return; // Guard handled the navigation
       }
+
+      // Cleanup previous view if destructor was registered
+      if (typeof this.currentCleanup === 'function') {
+        try {
+          this.currentCleanup();
+        } catch (err) {
+          console.warn('Error during route cleanup:', err);
+        }
+        this.currentCleanup = null;
+      } else if (this.currentCleanup && typeof this.currentCleanup.destroy === 'function') {
+        try {
+          this.currentCleanup.destroy();
+        } catch (err) {
+          console.warn('Error during route cleanup:', err);
+        }
+        this.currentCleanup = null;
+      }
+
       this.currentRoute = matchRoute;
-      matchRoute.action(matchParams);
+      const result = matchRoute.action(matchParams);
+      if (result instanceof Promise) {
+        result.then(cleanup => {
+          if (typeof cleanup === 'function' || (cleanup && typeof cleanup.destroy === 'function')) {
+            this.currentCleanup = cleanup;
+          }
+        }).catch(err => {
+          console.error('Route action error:', err);
+        });
+      } else if (typeof result === 'function' || (result && typeof result.destroy === 'function')) {
+        this.currentCleanup = result;
+      }
     }
   }
 
   navigate(path) {
     window.location.hash = path;
+  }
+
+  destroy() {
+    window.removeEventListener('hashchange', this._onHashChange);
+    window.removeEventListener('load', this._onHashChange);
+    if (typeof this.currentCleanup === 'function') {
+      this.currentCleanup();
+    } else if (this.currentCleanup && typeof this.currentCleanup.destroy === 'function') {
+      this.currentCleanup.destroy();
+    }
+    this.currentCleanup = null;
   }
 }

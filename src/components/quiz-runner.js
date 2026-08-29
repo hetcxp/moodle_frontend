@@ -18,7 +18,7 @@ export function createQuizRunner(courseId, mod, onCompletionUpdate) {
     if (mainArea) mainArea.scrollTo(0, 0);
 
     try {
-      const quiz = await QuizService.getQuizByCmId(courseId, mod.id);
+      const quiz = await QuizService.getQuiz(courseId, mod);
       if (!quiz) {
         renderError('No se pudo cargar la información del examen.');
         return;
@@ -177,9 +177,23 @@ export function createQuizRunner(courseId, mod, onCompletionUpdate) {
           currentAttemptId = attempt.id;
           loadAttemptPage(attempt.id, 0);
         } catch (e) {
+          const errorMsg = (e && (e.message || e.errorcode || '')) + '';
+          if (errorMsg.toLowerCase().includes('progress') || errorMsg.toLowerCase().includes('inprogress')) {
+            try {
+              const freshAttempts = await QuizService.getUserAttempts(quiz.id);
+              const active = freshAttempts.find(a => a.state === 'inprogress' || a.state === 'overdue');
+              if (active) {
+                currentAttemptId = active.id;
+                loadAttemptPage(active.id, active.currentpage || 0);
+                return;
+              }
+            } catch (errRefetch) {
+              console.error('Error recovering active attempt:', errRefetch);
+            }
+          }
           alert('No se pudo iniciar el examen. ' + (e.message || ''));
           startBtn.disabled = false;
-          startBtn.textContent = 'Iniciar examen';
+          startBtn.textContent = attempts.length > 0 ? 'Iniciar un nuevo intento' : 'Iniciar examen';
         }
       };
       actionsDiv.appendChild(startBtn);
@@ -524,6 +538,10 @@ export function createQuizRunner(courseId, mod, onCompletionUpdate) {
 
     container.appendChild(reviewCard);
   }
+
+  container.destroy = () => {
+    stopTimer();
+  };
 
   return container;
 }

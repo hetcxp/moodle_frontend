@@ -66,6 +66,31 @@ export const AuthService = {
     return true;
   },
 
+  async loginWithToken(token) {
+    // Usar el token para obtener la info del usuario
+    const infoUrl = new URL(API_CONFIG.baseUrl + API_CONFIG.endpoints.rest, window.location.origin);
+    infoUrl.searchParams.append('wstoken', token);
+    infoUrl.searchParams.append('wsfunction', 'core_webservice_get_site_info');
+    infoUrl.searchParams.append('moodlewsrestformat', 'json');
+    
+    const infoRes = await fetch(infoUrl.toString(), { method: 'POST' });
+    const infoData = await infoRes.json();
+    
+    if (infoData.exception) throw new Error(infoData.message);
+    
+    // Save session
+    sessionStorage.setItem('moodle_token', token);
+    
+    sessionStorage.setItem('moodle_user', JSON.stringify({
+      userid: infoData.userid,
+      fullname: infoData.fullname,
+      userpictureurl: infoData.userpictureurl,
+      sitename: infoData.sitename
+    }));
+    
+    return true;
+  },
+
   logout() {
     sessionStorage.removeItem('moodle_token');
     sessionStorage.removeItem('moodle_user');

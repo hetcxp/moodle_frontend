@@ -82,26 +82,14 @@ export const CourseService = {
     }
   },
 
-  async getPageContent(courseId, cmId, useAdmin = false) {
-    try {
-      const customToken = useAdmin ? import.meta.env.VITE_MOODLE_ADMIN_TOKEN : null;
-      // First, get all pages for the course
-      const response = await MoodleApi.call('mod_page_get_pages_by_courses', {
-        'courseids[0]': courseId
-      }, customToken);
-      
-      if (response && response.pages) {
-        // Find the specific page by coursemodule id
-        const page = response.pages.find(p => p.coursemodule == cmId);
-        if (page) {
-          return page;
-        }
-      }
-      return null;
-    } catch (e) {
-      console.error(`Failed to fetch page content for cmId ${cmId}`, e);
-      return null;
+  async getPageContent(courseId, cmId) {
+    const response = await MoodleApi.callWithFallback('mod_page_get_pages_by_courses', {
+      'courseids[0]': courseId
+    });
+    if (response && response.pages) {
+      return response.pages.find(p => p.coursemodule == cmId) || null;
     }
+    return null;
   },
 
   async getScormAttemptCount(scormId) {
@@ -114,9 +102,6 @@ export const CourseService = {
         userid: user.userid,
         ignoremissingcompletion: 0
       });
-
-      
-      // Moodle might return it under different properties depending on version
       return result.attemptscount !== undefined ? result.attemptscount : (result.attempts || 0);
     } catch (e) {
       console.error(`Failed to fetch SCORM attempt count for scormId ${scormId}`, e);
@@ -136,7 +121,6 @@ export const CourseService = {
         courseid: courseId,
         userid: user.userid
       });
-      // Index by cmid for fast lookup
       const map = {};
       (result.statuses || []).forEach(s => { map[s.cmid] = s; });
       return map;
@@ -159,56 +143,28 @@ export const CourseService = {
     }
   },
 
-  async getH5pActivityIntro(courseId, cmId, useAdmin = false) {
-    try {
-      const customToken = useAdmin ? import.meta.env.VITE_MOODLE_ADMIN_TOKEN : null;
-      const result = await MoodleApi.call('mod_h5pactivity_get_h5pactivities_by_courses', {
-        'courseids[0]': courseId
-      }, customToken);
-      if (result && result.h5pactivities) {
-        const activity = result.h5pactivities.find(a => a.coursemodule == cmId);
-        return activity ? activity.intro : null;
-      }
-    } catch (e) {
-      console.error('Failed to fetch H5P intro', e);
+  async getH5pActivityIntro(courseId, cmId) {
+    const result = await MoodleApi.callWithFallback('mod_h5pactivity_get_h5pactivities_by_courses', {
+      'courseids[0]': courseId
+    });
+    if (result && result.h5pactivities) {
+      const activity = result.h5pactivities.find(a => a.coursemodule == cmId);
+      return activity ? activity.intro : null;
     }
     return null;
   },
 
-
   async getAssignmentData(courseId, cmId) {
-    const tryFetch = async (token) => {
-      try {
-        const url = new URL(import.meta.env.VITE_MOODLE_URL + '/webservice/rest/server.php');
-        url.searchParams.set('wstoken', token);
-        url.searchParams.set('wsfunction', 'mod_assign_get_assignments');
-        url.searchParams.set('moodlewsrestformat', 'json');
-        url.searchParams.set('courseids[0]', courseId);
-        const res = await fetch(url.toString(), { method: 'POST' });
-        if (!res.ok) return null;
-        const data = await res.json();
-        if (data.exception || data.errorcode) return null;
-        if (data.courses && data.courses.length > 0) {
-          return (data.courses[0].assignments || []).find(a => a.cmid == cmId) || null;
-        }
-      } catch (e) { /* silent */ }
-      return null;
-    };
-
-    // Intento 1: token de usuario
-    const userToken = AuthService.getToken();
-    if (userToken) {
-      const result = await tryFetch(userToken);
-      if (result) return result;
+    const data = await MoodleApi.callWithFallback('mod_assign_get_assignments', {
+      'courseids[0]': courseId
+    });
+    if (data && data.courses && data.courses.length > 0) {
+      return (data.courses[0].assignments || []).find(a => a.cmid == cmId) || null;
     }
-    // Fallback: admin token
-    const adminToken = import.meta.env.VITE_MOODLE_ADMIN_TOKEN;
-    if (adminToken) return await tryFetch(adminToken);
     return null;
   },
 
   async fetchFileContent(fileUrl) {
-
     const token = AuthService.getToken();
     if (!token || !fileUrl) return null;
     

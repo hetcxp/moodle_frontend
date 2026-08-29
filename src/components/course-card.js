@@ -16,7 +16,8 @@ export function createCourseCard(course, onClick) {
   img.className = 'course-image';
   img.alt = course.fullname || course.displayname;
   img.onerror = () => {
-    img.src = '/generic-course.svg';
+    img.onerror = null; // Prevent infinite loop if fallback also fails
+    img.src = `${import.meta.env.BASE_URL}generic-course.svg`;
   };
 
   const content = document.createElement('div');

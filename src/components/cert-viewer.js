@@ -1,4 +1,5 @@
 import { CertService } from '../services/cert.js';
+import { sanitizeHtml } from '../utils/sanitize.js';
 
 /**
  * Renderiza la vista nativa de un módulo mod_customcert.
@@ -68,7 +69,7 @@ export function createCertViewer({ mod, certData, issuances, courseId }) {
       border-radius: 8px;
       border: 1px solid var(--color-border, #333);
     `;
-    intro.innerHTML = certData.intro;
+    intro.innerHTML = sanitizeHtml(certData.intro);
     wrapper.appendChild(intro);
   }
 

@@ -7,15 +7,10 @@ export const CertService = {
    * Retorna array con metadatos (nombre, intro, coursemodule, id, etc.)
    */
   async getCertsByCoures(courseId) {
-    try {
-      const result = await MoodleApi.call('mod_customcert_get_customcerts_by_courses', {
-        'courseids[0]': courseId
-      });
-      return result?.customcerts || [];
-    } catch (e) {
-      console.error('CertService.getCertsByCoures failed', e);
-      return [];
-    }
+    const result = await MoodleApi.callWithFallback('mod_customcert_get_customcerts_by_courses', {
+      'courseids[0]': courseId
+    });
+    return result?.customcerts || [];
   },
 
   /**

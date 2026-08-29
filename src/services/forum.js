@@ -4,17 +4,13 @@ import { AuthService } from './auth.js';
 export const ForumService = {
   async getForumId(courseId, cmId, instanceHint) {
     if (instanceHint) return instanceHint;
-    try {
-      const res = await MoodleApi.call('mod_forum_get_forums_by_courses', {
-        'courseids[0]': courseId,
-      });
-      const forums = Array.isArray(res) ? res : (res.forums || []);
-      const forum = forums.find(f => f.coursemodule == cmId);
-      return forum ? forum.id : null;
-    } catch (e) {
-      console.error('ForumService.getForumId error', e);
-      return null;
-    }
+    
+    const res = await MoodleApi.callWithFallback('mod_forum_get_forums_by_courses', {
+      'courseids[0]': courseId,
+    });
+    const forums = Array.isArray(res) ? res : (res?.forums || []);
+    const forum = forums.find(f => f.coursemodule == cmId);
+    return forum ? forum.id : null;
   },
 
   async getDiscussions(forumId, page = 0, perPage = 20) {

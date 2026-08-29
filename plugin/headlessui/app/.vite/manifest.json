@@ -1,0 +1,44 @@
+{
+  "index.html": {
+    "file": "assets/index-zGsh5QDx.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "dynamicImports": [
+      "src/components/forum-viewer.js",
+      "src/components/cert-viewer.js",
+      "src/services/cert.js"
+    ],
+    "css": [
+      "assets/index-CjdAaZWH.css"
+    ]
+  },
+  "src/components/cert-viewer.js": {
+    "file": "assets/cert-viewer-ESAQ4bUY.js",
+    "name": "cert-viewer",
+    "src": "src/components/cert-viewer.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "src/services/cert.js"
+    ]
+  },
+  "src/components/forum-viewer.js": {
+    "file": "assets/forum-viewer-Cjwz435U.js",
+    "name": "forum-viewer",
+    "src": "src/components/forum-viewer.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html"
+    ]
+  },
+  "src/services/cert.js": {
+    "file": "assets/cert-DUucu54F.js",
+    "name": "cert",
+    "src": "src/services/cert.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html"
+    ]
+  }
+}

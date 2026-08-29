@@ -16,7 +16,16 @@ export const TENANTS = {
 export function getTenantConfig() {
   const params = new URLSearchParams(window.location.search);
   const tenantKey = params.get('tenant') || import.meta.env.VITE_TENANT || 'default';
-  return TENANTS[tenantKey] || TENANTS['default'];
+  const baseConfig = TENANTS[tenantKey] || TENANTS['default'];
+  
+  if (window.HEADLESS_CONFIG) {
+    return {
+      ...baseConfig,
+      moodleUrl: window.HEADLESS_CONFIG.moodleUrl || baseConfig.moodleUrl,
+      serviceName: window.HEADLESS_CONFIG.serviceName || baseConfig.serviceName,
+    };
+  }
+  return baseConfig;
 }
 
 export function applyTenantTheme() {

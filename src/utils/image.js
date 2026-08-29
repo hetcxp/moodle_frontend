@@ -4,32 +4,38 @@ import { AuthService } from '../services/auth.js';
 export function getCourseImageUrl(course) {
   const replaceBaseUrl = (url) => url;
 
-  // 1. If course has direct courseimage field (Moodle 4.0+ enrol endpoint)
-  if (course.courseimage) {
-    const url = replaceBaseUrl(course.courseimage);
-    // Use webservice/pluginfile.php instead of pluginfile.php to allow token authentication
-    const wsUrl = url.replace(/\/pluginfile\.php/, '/webservice/pluginfile.php');
+  const processUrl = (rawUrl) => {
+    let url = replaceBaseUrl(rawUrl);
+    // Asegurar que no tengamos un /webservice/webservice/ accidental
+    let cleanUrl = url.replace(/\/webservice\/pluginfile\.php/, '/pluginfile.php');
+    const wsUrl = cleanUrl.replace(/\/pluginfile\.php/, '/webservice/pluginfile.php');
+    
+    // Check if URL already has a token
+    if (wsUrl.includes('token=')) {
+      return wsUrl;
+    }
+    
     if (wsUrl.includes('?')) {
       return `${wsUrl}&token=${AuthService.getToken()}`;
     }
     return `${wsUrl}?token=${AuthService.getToken()}`;
+  };
+
+  // 1. If course has direct courseimage field (Moodle 4.0+ enrol endpoint)
+  if (course.courseimage) {
+    return processUrl(course.courseimage);
   }
 
   // 2. If course has overviewfiles array (Moodle search endpoint)
   if (course.overviewfiles && course.overviewfiles.length > 0) {
     const file = course.overviewfiles[0];
     if (file.fileurl) {
-      const url = replaceBaseUrl(file.fileurl);
-      const wsUrl = url.replace(/\/pluginfile\.php/, '/webservice/pluginfile.php');
-      if (wsUrl.includes('?')) {
-        return `${wsUrl}&token=${AuthService.getToken()}`;
-      }
-      return `${wsUrl}?token=${AuthService.getToken()}`;
+      return processUrl(file.fileurl);
     }
   }
 
   // 3. Fallback generic image
-  return '/generic-course.svg';
+  return `${import.meta.env.BASE_URL}generic-course.svg`;
 }
 
 export function replacePluginfileUrls(html) {

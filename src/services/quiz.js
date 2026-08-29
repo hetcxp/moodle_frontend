@@ -2,20 +2,14 @@ import { MoodleApi } from './moodle-api.js';
 import { AuthService } from './auth.js';
 
 export const QuizService = {
-  async getQuizByCmId(courseId, cmId) {
-    try {
-      const response = await MoodleApi.call('mod_quiz_get_quizzes_by_courses', {
-        'courseids[0]': courseId
-      });
-      if (response && response.quizzes) {
-        const quiz = response.quizzes.find(q => q.coursemodule == cmId);
-        if (quiz) return quiz;
-      }
-      return null;
-    } catch (e) {
-      console.error(`Error fetching quiz for cmId ${cmId}:`, e);
-      return null;
+  async getQuiz(courseId, mod) {
+    const response = await MoodleApi.callWithFallback('mod_quiz_get_quizzes_by_courses', {
+      'courseids[0]': courseId
+    });
+    if (response && response.quizzes) {
+      return response.quizzes.find(q => q.coursemodule == mod.id || q.id == mod.instance) || null;
     }
+    return null;
   },
 
   async getUserAttempts(quizId) {
@@ -25,14 +19,17 @@ export const QuizService = {
       const response = await MoodleApi.call('mod_quiz_get_user_attempts', {
         quizid: quizId,
         userid: user.userid,
-        status: 'all'
+        status: 'all',
+        includepreviews: 1
       });
       return response.attempts || [];
     } catch (e) {
       console.warn(`Attempt fetching with userid failed for quizId ${quizId}, retrying with minimal params:`, e);
       try {
         const fallback = await MoodleApi.call('mod_quiz_get_user_attempts', {
-          quizid: quizId
+          quizid: quizId,
+          status: 'all',
+          includepreviews: 1
         });
         return fallback.attempts || [];
       } catch (e2) {

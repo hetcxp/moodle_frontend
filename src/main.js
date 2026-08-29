@@ -62,8 +62,17 @@ const routes = [
   }
 ];
 
-function init() {
+async function init() {
   applyTenantTheme();
+  
+  if (window.HEADLESS_CONFIG?.token && (!AuthService.isAuthenticated() || AuthService.getToken() !== window.HEADLESS_CONFIG.token)) {
+    try {
+      await AuthService.loginWithToken(window.HEADLESS_CONFIG.token);
+    } catch (err) {
+      console.error("Auto-login failed:", err);
+    }
+  }
+
   const router = new Router(routes);
 }
 
