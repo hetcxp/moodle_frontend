@@ -4,6 +4,7 @@ namespace local_headless;
 use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
+use core_external\external_multiple_structure;
 use core_external\external_value;
 use context_system;
 
@@ -119,6 +120,72 @@ class external extends external_api {
         return new external_single_structure([
             'success'      => new external_value(PARAM_BOOL, 'True if password changed successfully'),
             'errormessage' => new external_value(PARAM_TEXT, 'Error message if any'),
+        ]);
+    }
+
+    /**
+     * Parameter definition for get_user_enrolments external function.
+     *
+     * @return external_function_parameters
+     */
+    public static function get_user_enrolments_parameters(): external_function_parameters {
+        return new external_function_parameters([
+            'userid' => new external_value(PARAM_INT, 'User ID (0 for current user)', VALUE_DEFAULT, 0),
+        ]);
+    }
+
+    /**
+     * Get active enrolments with expiration timestamps (timestart, timeend) for a user.
+     *
+     * @param int $userid
+     * @return array
+     */
+    public static function get_user_enrolments(int $userid = 0): array {
+        global $DB, $USER;
+
+        $context = context_system::instance();
+        self::validate_context($context);
+
+        $params = self::validate_parameters(self::get_user_enrolments_parameters(), ['userid' => $userid]);
+        $targetuserid = empty($params['userid']) ? $USER->id : (int)$params['userid'];
+
+        if ($targetuserid != $USER->id) {
+            require_capability('moodle/user:viewdetails', $context);
+        }
+
+        $sql = "SELECT ue.id, e.courseid, ue.timestart, ue.timeend
+                  FROM {user_enrolments} ue
+                  JOIN {enrol} e ON e.id = ue.enrolid
+                 WHERE ue.userid = :userid AND ue.status = 0 AND e.status = 0";
+        $records = $DB->get_records_sql($sql, ['userid' => $targetuserid]);
+
+        $enrolments = [];
+        foreach ($records as $r) {
+            $enrolments[] = [
+                'courseid'  => (int)$r->courseid,
+                'timestart' => (int)$r->timestart,
+                'timeend'   => (int)$r->timeend,
+            ];
+        }
+
+        return ['enrolments' => $enrolments];
+    }
+
+    /**
+     * Return definition for get_user_enrolments external function.
+     *
+     * @return external_single_structure
+     */
+    public static function get_user_enrolments_returns(): external_single_structure {
+        return new external_single_structure([
+            'enrolments' => new external_multiple_structure(
+                new external_single_structure([
+                    'courseid'  => new external_value(PARAM_INT, 'Course ID'),
+                    'timestart' => new external_value(PARAM_INT, 'Enrolment start timestamp'),
+                    'timeend'   => new external_value(PARAM_INT, 'Enrolment end / expiration timestamp'),
+                ]),
+                'List of active user enrolments'
+            )
         ]);
     }
 }

@@ -8,18 +8,81 @@
 
 :root {
   --color-primary: #1a73e8;
+  --color-primary-rgb: 26, 115, 232;
+  --color-primary-text: #ffffff;
   --color-accent: #ff6d00;
+  --color-accent-rgb: 255, 109, 0;
   --color-surface: #ffffff;
   --color-background: #f4f5f7;
+  --color-header-bg: rgba(255, 255, 255, 0.92);
   --color-text-primary: #111827;
   --color-text-secondary: #4b5563;
   --color-border: rgba(0, 0, 0, 0.08);
   --color-bg-hover: rgba(0, 0, 0, 0.05);
   --color-bg-input: rgba(0, 0, 0, 0.03);
-  --color-bg-shadow: rgba(0, 0, 0, 0.1);
+  --color-bg-shadow: rgba(0, 0, 0, 0.08);
+  --color-card-border: rgba(0, 0, 0, 0.06);
   --font-family: 'Inter', sans-serif;
   --radius-card: 12px;
   --radius-input: 8px;
+  --color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --color-primary: #3b82f6;
+  --color-primary-rgb: 59, 130, 246;
+  --color-primary-text: #ffffff;
+  --color-accent: #f97316;
+  --color-accent-rgb: 249, 115, 22;
+  --color-surface: #1e222d;
+  --color-background: #11141d;
+  --color-header-bg: rgba(30, 34, 45, 0.92);
+  --color-text-primary: #f3f4f6;
+  --color-text-secondary: #9ca3af;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-bg-hover: rgba(255, 255, 255, 0.08);
+  --color-bg-input: rgba(255, 255, 255, 0.05);
+  --color-bg-shadow: rgba(0, 0, 0, 0.5);
+  --color-card-border: rgba(255, 255, 255, 0.08);
+  --color-scheme: dark;
+}
+
+[data-theme="microsoft"] {
+  --color-primary: #0078d4;
+  --color-primary-rgb: 0, 120, 212;
+  --color-primary-text: #ffffff;
+  --color-accent: #005a9e;
+  --color-accent-rgb: 0, 90, 158;
+  --color-surface: #ffffff;
+  --color-background: #edf3f9;
+  --color-header-bg: rgba(255, 255, 255, 0.95);
+  --color-text-primary: #18273a;
+  --color-text-secondary: #475a70;
+  --color-border: #d3e0ec;
+  --color-bg-hover: #e4eef7;
+  --color-bg-input: #f4f8fb;
+  --color-bg-shadow: rgba(0, 78, 150, 0.08);
+  --color-card-border: #d3e0ec;
+  --color-scheme: light;
+}
+
+[data-theme="gold-teal"] {
+  --color-primary: #e5b84c;
+  --color-primary-rgb: 229, 184, 76;
+  --color-primary-text: #091317;
+  --color-accent: #2dd4bf;
+  --color-accent-rgb: 45, 212, 191;
+  --color-surface: #112229;
+  --color-background: #091317;
+  --color-header-bg: rgba(17, 34, 41, 0.94);
+  --color-text-primary: #f0fdfa;
+  --color-text-secondary: #8fa8ab;
+  --color-border: rgba(229, 184, 76, 0.22);
+  --color-bg-hover: rgba(229, 184, 76, 0.12);
+  --color-bg-input: rgba(255, 255, 255, 0.06);
+  --color-bg-shadow: rgba(0, 0, 0, 0.65);
+  --color-card-border: rgba(229, 184, 76, 0.25);
+  --color-scheme: dark;
 }
 
 * {
@@ -32,8 +95,10 @@ body {
   font-family: var(--font-family);
   background-color: var(--color-background);
   color: var(--color-text-primary);
+  color-scheme: var(--color-scheme);
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 a {

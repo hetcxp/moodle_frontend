@@ -1,5 +1,6 @@
 import './styles/index.css';
 import { applyTenantTheme } from './config/tenant.js';
+import { initTheme } from './utils/theme.js';
 import { Router } from './router/index.js';
 import { AuthService } from './services/auth.js';
 import { renderLogin } from './views/login.js';
@@ -63,6 +64,7 @@ const routes = [
 ];
 
 async function init() {
+  initTheme();
   applyTenantTheme();
   
   if (window.HEADLESS_CONFIG?.token && (!AuthService.isAuthenticated() || AuthService.getToken() !== window.HEADLESS_CONFIG.token)) {

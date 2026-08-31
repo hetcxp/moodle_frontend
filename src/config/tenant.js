@@ -32,10 +32,15 @@ export function applyTenantTheme() {
   const config = getTenantConfig();
   const root = document.documentElement;
   
-  if (config.colors.primary) root.style.setProperty('--color-primary', config.colors.primary);
-  if (config.colors.accent) root.style.setProperty('--color-accent', config.colors.accent);
-  if (config.colors.surface) root.style.setProperty('--color-surface', config.colors.surface);
-  if (config.colors.background) root.style.setProperty('--color-background', config.colors.background);
+  const params = new URLSearchParams(window.location.search);
+  const tenantKey = params.get('tenant') || import.meta.env.VITE_TENANT;
+  
+  if (tenantKey && tenantKey !== 'default' && config.colors) {
+    if (config.colors.primary) root.style.setProperty('--color-primary', config.colors.primary);
+    if (config.colors.accent) root.style.setProperty('--color-accent', config.colors.accent);
+    if (config.colors.surface) root.style.setProperty('--color-surface', config.colors.surface);
+    if (config.colors.background) root.style.setProperty('--color-background', config.colors.background);
+  }
   
   return config;
 }

@@ -7,10 +7,43 @@ export const CourseService = {
     if (!user) return [];
     
     try {
-      const courses = await MoodleApi.call('core_enrol_get_users_courses', {
-        userid: user.userid
-      });
-      return Array.isArray(courses) ? courses : [];
+      const [courses, enrolmentsResult] = await Promise.all([
+        MoodleApi.call('core_enrol_get_users_courses', {
+          userid: user.userid
+        }),
+        MoodleApi.callWithFallback('local_headless_get_user_enrolments', {
+          userid: user.userid
+        }).catch(() => null)
+      ]);
+
+      const courseList = Array.isArray(courses) ? courses : [];
+
+      if (enrolmentsResult && Array.isArray(enrolmentsResult.enrolments)) {
+        const enrolMap = {};
+        enrolmentsResult.enrolments.forEach(e => {
+          if (e && e.courseid) {
+            const current = enrolMap[e.courseid];
+            if (!current) {
+              enrolMap[e.courseid] = e;
+            } else if (e.timeend > 0 && (!current.timeend || e.timeend < current.timeend)) {
+              enrolMap[e.courseid] = e;
+            }
+          }
+        });
+
+        courseList.forEach(course => {
+          if (enrolMap[course.id]) {
+            if (enrolMap[course.id].timeend > 0) {
+              course.timeend = enrolMap[course.id].timeend;
+            }
+            if (enrolMap[course.id].timestart > 0) {
+              course.timestart = enrolMap[course.id].timestart;
+            }
+          }
+        });
+      }
+
+      return courseList;
     } catch (e) {
       console.error('Failed to fetch enrolled courses', e);
       return [];

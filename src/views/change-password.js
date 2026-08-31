@@ -1,6 +1,7 @@
 import { AuthService } from '../services/auth.js';
 import { PasswordService } from '../services/password.js';
 import { getTenantConfig } from '../config/tenant.js';
+import { createThemeSelector } from '../components/header.js';
 
 export function renderChangePassword(container) {
   const tempSession = AuthService.getTempSession();
@@ -14,6 +15,7 @@ export function renderChangePassword(container) {
   
   container.innerHTML = `
     <div class="login-view">
+      <div class="login-top-bar" id="change-pass-theme-slot"></div>
       <div class="card login-card">
         <div class="login-header">
           <img src="${config.logo}" alt="Logo" class="login-logo" onerror="this.style.display='none'">
@@ -41,6 +43,11 @@ export function renderChangePassword(container) {
       </div>
     </div>
   `;
+
+  const themeSlot = container.querySelector('#change-pass-theme-slot');
+  if (themeSlot) {
+    themeSlot.appendChild(createThemeSelector());
+  }
 
   const form = container.querySelector('#change-password-form');
   const errorDiv = container.querySelector('#change-error');

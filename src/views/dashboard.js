@@ -3,7 +3,7 @@ import { createHeader } from '../components/header.js';
 import { createCourseCarousel } from '../components/course-carousel.js';
 import { createLoader } from '../components/loader.js';
 import { createModal } from '../components/modal.js';
-import { sanitizeHtml, escapeHtml } from '../utils/sanitize.js';
+import { sanitizeHtml, escapeHtml, decodeHtml } from '../utils/sanitize.js';
 
 export async function renderDashboard(container) {
   // Skeleton / Loader initial
@@ -28,7 +28,7 @@ export async function renderDashboard(container) {
       const cleanSummary = sanitizeHtml(course.summary || '') || 'Sin descripción disponible.';
       const modalBody = document.createElement('div');
       modalBody.innerHTML = `<div class="modal-description">${cleanSummary}</div><div class="loader-small">Cargando estructura...</div>`;
-      const modal = createModal(course.fullname, modalBody);
+      const modal = createModal(decodeHtml(course.fullname), modalBody);
       document.body.appendChild(modal);
 
       try {
@@ -107,7 +107,7 @@ export async function renderDashboard(container) {
       for (const [category, courses] of Object.entries(data.availableByCategory)) {
         const catTitle = document.createElement('h3');
         catTitle.className = 'category-title';
-        catTitle.textContent = category;
+        catTitle.textContent = decodeHtml(category);
         content.appendChild(catTitle);
         
         const catCarousel = createCourseCarousel(courses, handleAvailableClick);

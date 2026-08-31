@@ -11,7 +11,7 @@
 /* Button */
 .btn-primary {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-primary-text, #fff);
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: var(--radius-input);
@@ -89,13 +89,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--color-header-bg);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
   z-index: 100;
   gap: 0.5rem;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 .header-brand {
@@ -231,4 +232,186 @@
   align-items: center;
   padding: 2rem;
   width: 100%;
+}
+
+/* Theme Selector */
+.theme-selector-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-input);
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.btn-theme-toggle:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-primary);
+}
+
+.btn-theme-toggle:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.btn-theme-toggle .theme-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+
+.btn-theme-toggle .theme-chevron {
+  transition: transform 0.2s ease;
+  color: var(--color-text-secondary);
+}
+
+.theme-selector-container.open .btn-theme-toggle .theme-chevron {
+  transform: rotate(180deg);
+}
+
+.theme-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 240px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: 0 12px 30px var(--color-bg-shadow);
+  padding: 0.5rem;
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  gap: 0.25rem;
+  backdrop-filter: blur(16px);
+  animation: themeDropdownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+}
+
+.theme-selector-container.open .theme-dropdown {
+  display: flex;
+}
+
+@keyframes themeDropdownFade {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.theme-dropdown-header {
+  padding: 0.35rem 0.6rem 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 0.25rem;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: var(--radius-input);
+  background: transparent;
+  border: 1px solid transparent;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--color-text-primary);
+}
+
+.theme-option:hover {
+  background: var(--color-bg-hover);
+}
+
+.theme-option.active {
+  background: var(--color-bg-hover);
+  border-color: var(--color-primary);
+}
+
+.theme-option-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.theme-option-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.theme-option-desc {
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.1rem;
+}
+
+.theme-swatches {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  padding: 2px;
+  border-radius: 12px;
+  background: var(--color-border);
+}
+
+.theme-swatch-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.theme-check-icon {
+  color: var(--color-primary);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+}
+
+.theme-option.active .theme-check-icon {
+  opacity: 1;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .btn-theme-toggle .theme-name-text {
+    display: none;
+  }
+  .btn-theme-toggle {
+    padding: 0.4rem;
+  }
+  .theme-dropdown {
+    right: -10px;
+    min-width: 220px;
+  }
 }

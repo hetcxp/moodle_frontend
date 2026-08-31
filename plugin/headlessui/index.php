@@ -44,6 +44,12 @@ if (!$service) {
     throw new moodle_exception('servicenotavailable', 'error', '', null, get_string('servicenotconfigured', 'local_headlessui'));
 }
 
+if (empty($service->downloadfiles) || empty($service->uploadfiles)) {
+    $service->downloadfiles = 1;
+    $service->uploadfiles = 1;
+    $DB->update_record('external_services', $service);
+}
+
 // Buscar token existente o crear uno nuevo
 $token = external_generate_token(
     EXTERNAL_TOKEN_PERMANENT,

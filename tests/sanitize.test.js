@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { escapeHtml, sanitizeHtml } from '../src/utils/sanitize.js';
+import { escapeHtml, sanitizeHtml, decodeHtml } from '../src/utils/sanitize.js';
 
 describe('Sanitize & Escape Utilities', () => {
   describe('escapeHtml', () => {
@@ -57,10 +57,38 @@ describe('Sanitize & Escape Utilities', () => {
       expect(clean).toContain('<ul><li>Item 1</li></ul>');
     });
 
+    it('cleans conflicting hardcoded background and text colors from inline styles while preserving layout styles', () => {
+      const dirty = '<div style="background-color: #ffffff; color: #000000; padding: 20px; text-align: center;"><p style="color: #333333; margin-bottom: 10px;">Texto</p></div>';
+      const clean = sanitizeHtml(dirty);
+      expect(clean).not.toContain('background-color: #ffffff');
+      expect(clean).not.toContain('color: #000000');
+      expect(clean).not.toContain('color: #333333');
+      expect(clean).toContain('padding: 20px');
+      expect(clean).toContain('text-align: center');
+      expect(clean).toContain('margin-bottom: 10px');
+    });
+
     it('handles empty or non-string inputs safely', () => {
       expect(sanitizeHtml('')).toBe('');
       expect(sanitizeHtml(null)).toBe('');
       expect(sanitizeHtml(undefined)).toBe('');
+    });
+  });
+
+  describe('decodeHtml', () => {
+    it('decodes HTML entities into normal characters', () => {
+      expect(decodeHtml('Bienvenida &amp; Paso 1 en Negociador Elite')).toBe('Bienvenida & Paso 1 en Negociador Elite');
+      expect(decodeHtml('Curso &lt;1&gt; &quot;Avanzado&#039;s&quot;')).toBe('Curso <1> "Avanzado\'s"');
+    });
+
+    it('handles null, undefined and empty strings safely', () => {
+      expect(decodeHtml(null)).toBe('');
+      expect(decodeHtml(undefined)).toBe('');
+      expect(decodeHtml('')).toBe('');
+    });
+
+    it('preserves clean strings without entities', () => {
+      expect(decodeHtml('Diseño Instruccional')).toBe('Diseño Instruccional');
     });
   });
 });

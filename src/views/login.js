@@ -1,11 +1,13 @@
 import { AuthService } from '../services/auth.js';
 import { getTenantConfig } from '../config/tenant.js';
+import { createThemeSelector } from '../components/header.js';
 
 export function renderLogin(container) {
   const config = getTenantConfig();
   
   container.innerHTML = `
     <div class="login-view">
+      <div class="login-top-bar" id="login-theme-slot"></div>
       <div class="card login-card">
         <div class="login-header">
           <img src="${config.logo}" alt="Logo" class="login-logo" onerror="this.style.display='none'">
@@ -33,6 +35,11 @@ export function renderLogin(container) {
       </div>
     </div>
   `;
+
+  const themeSlot = container.querySelector('#login-theme-slot');
+  if (themeSlot) {
+    themeSlot.appendChild(createThemeSelector());
+  }
 
   const form = container.querySelector('#login-form');
   const errorDiv = container.querySelector('#login-error');

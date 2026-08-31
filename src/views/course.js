@@ -281,7 +281,7 @@ export async function renderCourse(container, courseId) {
         }
       } else if (mod.modname === 'scorm') {
         contentWrapper.className = 'resource-content scorm-content';
-        let scormHtml = '<div class="scorm-container" style="padding: 2rem; background: var(--bg-card); border-radius: 8px; margin-bottom: 2rem; text-align: center;">';
+        let scormHtml = '<div class="scorm-container" style="padding: 2rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); margin-bottom: 2rem; text-align: center;">';
         
         if (mod.description) {
           scormHtml += `
@@ -694,7 +694,6 @@ export async function renderCourse(container, courseId) {
         if (comp && comp.hascompletion) {
           const compCard = document.createElement('div');
           compCard.className = 'completion-card';
-          compCard.style.cssText = 'margin-top: 1.5rem; padding: 1rem 1.25rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.5rem;';
 
           const ruleLabels = {
             completionview: 'Ver la actividad',
@@ -711,14 +710,14 @@ export async function renderCourse(container, courseId) {
           let criteriaHtml = comp.details.map(d => {
             const label = ruleLabels[d.rulename] || d.rulename;
             const ok = d.rulevalue.status === 1;
-            return `<li style="color: ${ok ? '#22c55e' : 'var(--text-muted)'}; font-size: 0.875rem;">${ok ? '✓' : '○'} ${label}</li>`;
+            return `<li style="color: ${ok ? '#22c55e' : 'var(--color-text-secondary)'}; font-size: 0.875rem;">${ok ? '✓' : '○'} ${label}</li>`;
           }).join('');
 
           compCard.innerHTML = `
             <div style="display: flex; align-items: center; gap: 0.75rem;">
               <span style="font-size: 1.25rem; color: ${stateColor};">${stateIcon}</span>
               <span style="font-weight: 600; color: ${stateColor};">${stateText}</span>
-              ${comp.isautomatic ? '<span style="font-size: 0.75rem; color: var(--text-muted); margin-left: auto;">Completación automática</span>' : '<span style="font-size: 0.75rem; color: var(--text-muted); margin-left: auto;">Completación manual</span>'}
+              ${comp.isautomatic ? '<span style="font-size: 0.75rem; color: var(--color-text-secondary); margin-left: auto;">Completación automática</span>' : '<span style="font-size: 0.75rem; color: var(--color-text-secondary); margin-left: auto;">Completación manual</span>'}
             </div>
             ${criteriaHtml ? `<ul style="margin: 0.25rem 0 0 2rem; padding: 0; list-style: none;">${criteriaHtml}</ul>` : ''}
           `;

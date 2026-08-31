@@ -28,5 +28,36 @@ function xmldb_local_headless_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026072203, 'local', 'headless');
     }
 
+    if ($oldversion < 2026082902) {
+        $service = $DB->get_record('external_services', ['shortname' => 'headless_service']);
+        if ($service) {
+            $service->downloadfiles = 1;
+            $service->uploadfiles = 1;
+            $DB->update_record('external_services', $service);
+        }
+        upgrade_plugin_savepoint(true, 2026082902, 'local', 'headless');
+    }
+
+    if ($oldversion < 2026083101) {
+        $services = ['headless_service', 'moodle_mobile_app'];
+        $fname = 'local_headless_get_user_enrolments';
+        foreach ($services as $sname) {
+            $service = $DB->get_record('external_services', ['shortname' => $sname], 'id');
+            if ($service) {
+                $exists = $DB->record_exists('external_services_functions', [
+                    'externalserviceid' => $service->id,
+                    'functionname'      => $fname,
+                ]);
+                if (!$exists) {
+                    $DB->insert_record('external_services_functions', [
+                        'externalserviceid' => $service->id,
+                        'functionname'      => $fname,
+                    ]);
+                }
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026083101, 'local', 'headless');
+    }
+
     return true;
 }

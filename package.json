@@ -9,6 +9,10 @@
     "build:moodle": "vite build -c vite.moodle.config.js && node scripts/build-moodle.js",
     "preview": "vite preview",
     "test": "vitest run",
+    "moodle:upgrade": "/opt/homebrew/opt/php@8.3/bin/php /Users/hectorteran/Dev/moodle-dev/admin/cli/upgrade.php --non-interactive",
+    "moodle:purge": "/opt/homebrew/opt/php@8.3/bin/php /Users/hectorteran/Dev/moodle-dev/admin/cli/purge_caches.php",
+    "moodle:sync": "npm run build:moodle && npm run moodle:upgrade && npm run moodle:purge",
+    "moodle:extract": "python3 /Users/hectorteran/Documents/scripts/extract_schemas.py --src . --out .llm_build/index.md",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },

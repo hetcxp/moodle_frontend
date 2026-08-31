@@ -18,6 +18,15 @@ $functions = [
         'type'        => 'write',
         'loginrequired' => true,
     ],
+    'local_headless_get_user_enrolments' => [
+        'classname'   => 'local_headless\external',
+        'methodname'  => 'get_user_enrolments',
+        'classpath'   => 'local/headless/classes/external.php',
+        'description' => 'Get active enrolments and expiration timestamps for a user',
+        'type'        => 'read',
+        'ajax'        => true,
+        'loginrequired' => true,
+    ],
 ];
 
 $services = [
@@ -25,6 +34,7 @@ $services = [
         'functions' => [
             'local_headless_get_autologin_key',
             'local_headless_change_password',
+            'local_headless_get_user_enrolments',
             'core_webservice_get_site_info',
             'core_enrol_get_users_courses',
             'core_course_search_courses',
@@ -55,5 +65,7 @@ $services = [
         'restrictedusers' => 0,
         'enabled' => 1,
         'shortname' => 'headless_service',
+        'downloadfiles' => 1,
+        'uploadfiles' => 1,
     ],
 ];

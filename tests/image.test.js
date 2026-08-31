@@ -1,10 +1,30 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getCourseImageUrl, replacePluginfileUrls, replaceRelativeImages } from '../src/utils/image.js';
+import { 
+  getCourseImageUrl, 
+  getDirectCourseImageUrl, 
+  normalizeMoodleUrl, 
+  replacePluginfileUrls, 
+  replaceRelativeImages 
+} from '../src/utils/image.js';
 import { AuthService } from '../src/services/auth.js';
 
 describe('Image and Media URL Utilities', () => {
   beforeEach(() => {
     vi.spyOn(AuthService, 'getToken').mockReturnValue('mock-auth-token-123');
+  });
+
+  describe('normalizeMoodleUrl', () => {
+    it('strips forcedownload=1 to enable inline display', () => {
+      const url = 'https://moodle.example.com/webservice/pluginfile.php/123/course/overviewfiles/cover.jpg?forcedownload=1';
+      expect(normalizeMoodleUrl(url)).toBe('https://moodle.example.com/webservice/pluginfile.php/123/course/overviewfiles/cover.jpg');
+    });
+
+    it('handles relative URLs by prepending origin/baseUrl', () => {
+      const url = '/pluginfile.php/123/course/overviewfiles/cover.jpg';
+      const result = normalizeMoodleUrl(url);
+      expect(result).toContain('/pluginfile.php/123/course/overviewfiles/cover.jpg');
+      expect(result.startsWith('http')).toBe(true);
+    });
   });
 
   describe('getCourseImageUrl', () => {
@@ -17,7 +37,7 @@ describe('Image and Media URL Utilities', () => {
       expect(result).toBe('https://moodle.example.com/webservice/pluginfile.php/123/course/overviewfiles/cover.jpg?token=mock-auth-token-123');
     });
 
-    it('returns processed URL with token when course has overviewfiles', () => {
+    it('returns processed URL with token and cleans forcedownload when course has overviewfiles', () => {
       const course = {
         id: 2,
         overviewfiles: [
@@ -25,12 +45,29 @@ describe('Image and Media URL Utilities', () => {
         ]
       };
       const result = getCourseImageUrl(course);
-      expect(result).toBe('https://moodle.example.com/webservice/pluginfile.php/456/course/overviewfiles/image.png?forcedownload=1&token=mock-auth-token-123');
+      expect(result).toBe('https://moodle.example.com/webservice/pluginfile.php/456/course/overviewfiles/image.png?token=mock-auth-token-123');
     });
 
     it('returns fallback generic image when no image fields exist', () => {
       const course = { id: 3 };
       const result = getCourseImageUrl(course);
+      expect(result).toContain('generic-course.svg');
+    });
+  });
+
+  describe('getDirectCourseImageUrl', () => {
+    it('returns standard /pluginfile.php URL without token for session-based fallback', () => {
+      const course = {
+        id: 1,
+        courseimage: 'https://moodle.example.com/webservice/pluginfile.php/123/course/overviewfiles/cover.jpg?token=existing-token'
+      };
+      const result = getDirectCourseImageUrl(course);
+      expect(result).toBe('https://moodle.example.com/pluginfile.php/123/course/overviewfiles/cover.jpg');
+    });
+
+    it('returns fallback generic image when course has no images', () => {
+      const course = { id: 4 };
+      const result = getDirectCourseImageUrl(course);
       expect(result).toContain('generic-course.svg');
     });
   });

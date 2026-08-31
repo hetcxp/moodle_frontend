@@ -4,6 +4,15 @@
   justify-content: center;
   flex: 1;
   padding: 1rem;
+  position: relative;
+  min-height: 100vh;
+}
+
+.login-top-bar {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.5rem;
+  z-index: 50;
 }
 
 .login-card {
