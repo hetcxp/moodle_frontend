@@ -1,26 +1,28 @@
 # Operaciones y Entorno Local (.llm_build/operations.md)
 
+> Última actualización: 2026-08-31
+
 Guía de referencia rápida del entorno, rutas del sistema, comandos CLI de Moodle y recetas de delegación MCP para optimización de tokens y ejecución sin exploración redundante.
 
 ---
 
 ## 1. Mapa de Rutas del Entorno Local
 
-| Recurso | Ruta Absoluta | Notas |
-|---|---|---|
-| **PHP 8.3 Binario** | `/opt/homebrew/opt/php@8.3/bin/php` | Usar siempre para scripts CLI de Moodle |
-| **Moodle Core Root** | `/Users/hectorteran/Dev/moodle-dev` | Directorio raíz de la instalación de Moodle |
-| **Moodle Public Root** | `/Users/hectorteran/Dev/moodle-dev/public` | Servido en `http://localhost:8000` |
-| **Frontend Workspace** | `/Users/hectorteran/Documents/moodle_frontend` | Proyecto Vite / SPA / Plugins UI |
-| **Plugin Headless (Backend)** | `/Users/hectorteran/Documents/moodle_frontend/plugin/headless` | Symlinked a `moodle-dev/local/headless` |
-| **Plugin Headless UI** | `/Users/hectorteran/Documents/moodle_frontend/plugin/headlessui` | Symlinked a `moodle-dev/public/local/headlessui` |
-| **Extractor AST (.llm_build)** | `/Users/hectorteran/Documents/scripts/extract_schemas.py` | Generador de esquemas AST |
+| Recurso | Ruta Absoluta | Propósito | Notas técnicas |
+|---|---|---|---|
+| **PHP 8.3 Binario** | `/opt/homebrew/opt/php@8.3/bin/php` | Ejecutar scripts CLI de Moodle | Verificar con `php -v` antes de asumir la ruta si hay upgrade de versión |
+| **Moodle Core Root** | `/Users/hectorteran/Dev/moodle-dev` | Raíz de la instalación de Moodle | — |
+| **Moodle Public Root** | `/Users/hectorteran/Dev/moodle-dev/public` | Servido en `http://localhost:8000` | — |
+| **Frontend Workspace** | `/Users/hectorteran/Documents/moodle_frontend` | Proyecto Vite / SPA / Plugins UI | — |
+| **Plugin Headless (Backend)** | `/Users/hectorteran/Documents/moodle_frontend/plugin/headless` | Backend del plugin headless | Symlinked a `moodle-dev/local/headless` |
+| **Plugin Headless UI** | `/Users/hectorteran/Documents/moodle_frontend/plugin/headlessui` | UI del plugin headless | Symlinked a `moodle-dev/public/local/headlessui` |
+| **Extractor AST** | `/Users/hectorteran/Documents/scripts/extract_schemas.py` | Generador de esquemas AST | Output: `.llm_build/index.md` (invocado vía `npm run moodle:extract`) |
 
 ---
 
 ## 2. Recetas de Comandos CLI y Scripts NPM
 
-Se configuraron accesos directos en `package.json` para ejecución inmediata con costo de 0 tokens de búsqueda:
+Accesos directos configurados en `package.json` para ejecución inmediata con costo de 0 tokens de búsqueda:
 
 ```bash
 # 1. Upgrade de base de datos Moodle
@@ -41,23 +43,19 @@ npm test
 
 ---
 
-## 3. Guía de Delegación MCP (Ahorro de Tokens)
+## 3. Tabla de Delegación MCP (Modelo + Trigger + Template)
 
-### Cuándo delegar a `gemma4-mac` (4B - Texto / Baja Latencia):
-- **Extracción de Comandos y Keywords:** Cuando se requiera buscar un comando CLI específico o filtrar logs extensos de error de Moodle.
-- **Traducciones i18n:** Redacción de cadenas en `lang/es/*.php` o `lang/en/*.php`.
-- **Patrones de Búsqueda:** Generación de expresiones regulares concisas para búsquedas en código.
+| Tarea | Modelo | Cuándo delegar | Template |
+|---|---|---|---|
+| Extracción de comandos CLI / filtrado de logs | `gemma4-mac` | Buscar un comando específico en `admin/cli/` o filtrar logs extensos de error de Moodle | Ver 3.1 |
+| Traducciones i18n | `gemma4-mac` | Redacción de cadenas en `lang/es/*.php` o `lang/en/*.php` | — |
+| Patrones de búsqueda | `gemma4-mac` | Generación de regex concisas para búsquedas en código | — |
+| Tests unitarios | `qwen3-mac` | Redacción de suites Vitest (`tests/*.test.js`) | Ver 3.2 |
+| Funciones aisladas | `qwen3-mac` | Creación/refactor de métodos específicos en servicios o utilidades | — |
+| Conventional commits | `qwen3-mac` | Análisis de `git diff` para redactar commits atómicos estructurados | — |
+| **Cualquier otra tarea** | **No delegar** | Lógica de negocio compleja, cambios cross-file, o decisiones de arquitectura → resolver directamente, sin pasar por modelos locales | — |
 
-### Cuándo delegar a `qwen3-mac` (8B - Código / Lógica):
-- **Generación de Tests Unitarios:** Redacción de suites de tests en Vitest (`tests/*.test.js`).
-- **Funciones Aisladas:** Creación o refactorización de métodos específicos en servicios o utilidades.
-- **Conventional Commits:** Análisis de `git diff` para redactar commits atómicos estructurados.
-
----
-
-## 4. Plantillas de Prompt para Delegación MCP
-
-### Template para `gemma4-mac` (Filtrado de Logs / Resolución de Comandos):
+### 3.1 Template `gemma4-mac` (Filtrado de logs / resolución de comandos)
 ```json
 {
   "messages": [
@@ -66,11 +64,11 @@ npm test
       "content": "Analiza el siguiente error/requerimiento de Moodle y extrae el comando CLI exacto de /Users/hectorteran/Dev/moodle-dev/admin/cli/ necesario: {CONTEXT}"
     }
   ],
-  "model": "gemma-4b"
+  "model": "gemma4-mac"
 }
 ```
 
-### Template para `qwen3-mac` (Generación de Tests / Código):
+### 3.2 Template `qwen3-mac` (Generación de tests / código)
 ```json
 {
   "messages": [
@@ -79,6 +77,6 @@ npm test
       "content": "Genera el test unitario para Vitest para la siguiente función JavaScript usando jsdom: {CODE_SNIPPET}"
     }
   ],
-  "model": "qwen3-8b"
+  "model": "qwen3-mac"
 }
 ```
