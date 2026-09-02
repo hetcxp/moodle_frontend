@@ -96,10 +96,15 @@ export function createCourseCarousel(courses, onClick) {
     resizeObserver.observe(track);
   }
 
-  // Ejecución inicial después de un breve delay
-  setTimeout(updateButtons, 100);
+  let initialTimeout = setTimeout(updateButtons, 100);
 
   wrapper.destroy = () => {
+    if (isScrolling) {
+      window.clearTimeout(isScrolling);
+    }
+    if (initialTimeout) {
+      window.clearTimeout(initialTimeout);
+    }
     if (resizeObserver) {
       resizeObserver.disconnect();
       resizeObserver = null;

@@ -1,7 +1,12 @@
+// @ts-check
 import { MoodleApi } from './moodle-api.js';
 import { AuthService } from './auth.js';
 
 export const CourseService = {
+  /**
+   * Obtiene los cursos matriculados del usuario autenticado con datos de inicio y fin.
+   * @returns {Promise<Array<Record<string, any>>>}
+   */
   async getEnrolledCourses() {
     const user = AuthService.getUser();
     if (!user) return [];
@@ -19,6 +24,7 @@ export const CourseService = {
       const courseList = Array.isArray(courses) ? courses : [];
 
       if (enrolmentsResult && Array.isArray(enrolmentsResult.enrolments)) {
+        /** @type {Record<string|number, any>} */
         const enrolMap = {};
         enrolmentsResult.enrolments.forEach(e => {
           if (e && e.courseid) {
@@ -50,9 +56,14 @@ export const CourseService = {
     }
   },
 
+  /**
+   * Obtiene todos los cursos visibles en el catálogo general.
+   * @returns {Promise<Array<Record<string, any>>>}
+   */
   async getAllVisibleCourses() {
     try {
       // search_courses with empty search returns all visible courses
+      /** @type {{ courses?: Array<Record<string, any>> }} */
       const result = await MoodleApi.call('core_course_search_courses', {
         criterianame: 'search',
         criteriavalue: ''
@@ -64,6 +75,10 @@ export const CourseService = {
     }
   },
 
+  /**
+   * Obtiene la estructura organizada de cursos para el dashboard (activos, completados, disponibles por categoría).
+   * @returns {Promise<{ active: Array<Record<string, any>>, completed: Array<Record<string, any>>, availableByCategory: Record<string, Array<Record<string, any>>> }>}
+   */
   async getDashboardCourses() {
     const [enrolled, all] = await Promise.all([
       this.getEnrolledCourses(),
@@ -102,12 +117,16 @@ export const CourseService = {
     };
   },
 
-  async getCourseContents(courseId, useAdmin = false) {
+  /**
+   * Obtiene el árbol de contenidos (secciones y módulos) de un curso.
+   * @param {number|string} courseId
+   * @returns {Promise<Array<Record<string, any>>>}
+   */
+  async getCourseContents(courseId) {
     try {
-      const customToken = useAdmin ? import.meta.env.VITE_MOODLE_ADMIN_TOKEN : null;
       const contents = await MoodleApi.call('core_course_get_contents', {
         courseid: courseId
-      }, customToken);
+      });
       return Array.isArray(contents) ? contents : [];
     } catch (e) {
       console.error(`Failed to fetch contents for course ${courseId}`, e);
@@ -115,7 +134,14 @@ export const CourseService = {
     }
   },
 
+  /**
+   * Obtiene la información detallada de una actividad Page de Moodle.
+   * @param {number|string} courseId
+   * @param {number|string} cmId
+   * @returns {Promise<Record<string, any>|null>}
+   */
   async getPageContent(courseId, cmId) {
+    /** @type {{ pages?: Array<Record<string, any>> } | null} */
     const response = await MoodleApi.callWithFallback('mod_page_get_pages_by_courses', {
       'courseids[0]': courseId
     });
@@ -125,11 +151,17 @@ export const CourseService = {
     return null;
   },
 
+  /**
+   * Obtiene el número de intentos realizados en un módulo SCORM.
+   * @param {number|string} scormId
+   * @returns {Promise<number|null>}
+   */
   async getScormAttemptCount(scormId) {
     const user = AuthService.getUser();
     if (!user) return 0;
     
     try {
+      /** @type {Record<string, any>} */
       const result = await MoodleApi.call('mod_scorm_get_scorm_attempt_count', {
         scormid: scormId,
         userid: user.userid,
@@ -142,14 +174,25 @@ export const CourseService = {
     }
   },
 
+  /**
+   * Genera URL con auto-login SSO para redirigir a Moodle.
+   * @param {string} url
+   * @returns {Promise<string>}
+   */
   async getAutoLoginUrl(url) {
     return await MoodleApi.getAutoLoginUrl(url);
   },
 
+  /**
+   * Obtiene el estado de finalización de actividades de un curso para el usuario actual.
+   * @param {number|string} courseId
+   * @returns {Promise<Record<string|number, any>>}
+   */
   async getActivitiesCompletionStatus(courseId) {
     const user = AuthService.getUser();
     if (!user) return {};
     try {
+      /** @type {{ statuses?: Array<Record<string, any>> }} */
       const result = await MoodleApi.call('core_completion_get_activities_completion_status', {
         courseid: courseId,
         userid: user.userid
@@ -163,6 +206,12 @@ export const CourseService = {
     }
   },
 
+  /**
+   * Actualiza manualmente el estado de finalización de una actividad.
+   * @param {number|string} cmId
+   * @param {boolean} completed
+   * @returns {Promise<boolean>}
+   */
   async markActivityComplete(cmId, completed) {
     try {
       await MoodleApi.call('core_completion_update_activity_completion_status_manually', {
@@ -176,7 +225,14 @@ export const CourseService = {
     }
   },
 
+  /**
+   * Obtiene la descripción o introducción de una actividad H5P.
+   * @param {number|string} courseId
+   * @param {number|string} cmId
+   * @returns {Promise<string|null>}
+   */
   async getH5pActivityIntro(courseId, cmId) {
+    /** @type {{ h5pactivities?: Array<Record<string, any>> } | null} */
     const result = await MoodleApi.callWithFallback('mod_h5pactivity_get_h5pactivities_by_courses', {
       'courseids[0]': courseId
     });
@@ -187,16 +243,29 @@ export const CourseService = {
     return null;
   },
 
+  /**
+   * Obtiene los datos detallados de una tarea (mod_assign).
+   * @param {number|string} courseId
+   * @param {number|string} cmId
+   * @returns {Promise<Record<string, any>|null>}
+   */
   async getAssignmentData(courseId, cmId) {
+    /** @type {{ courses?: Array<{ id: number|string, assignments?: Array<Record<string, any>> }> } | null} */
     const data = await MoodleApi.callWithFallback('mod_assign_get_assignments', {
       'courseids[0]': courseId
     });
     if (data && data.courses && data.courses.length > 0) {
-      return (data.courses[0].assignments || []).find(a => a.cmid == cmId) || null;
+      const targetCourse = data.courses.find(c => c.id == courseId) || data.courses[0];
+      return (targetCourse?.assignments || []).find(a => a.cmid == cmId) || null;
     }
     return null;
   },
 
+  /**
+   * Descarga el contenido de texto plano / HTML de un recurso protegido mediante token.
+   * @param {string} fileUrl
+   * @returns {Promise<string|null>}
+   */
   async fetchFileContent(fileUrl) {
     const token = AuthService.getToken();
     if (!token || !fileUrl) return null;
@@ -214,3 +283,4 @@ export const CourseService = {
     return null;
   }
 };
+

@@ -104,5 +104,15 @@ describe('Image and Media URL Utilities', () => {
       expect(result).toContain('https://moodle.example.com/file.php/1?token=mock-auth-token-123');
       expect(result).toContain('https://moodle.example.com/file.php/2?token=mock-auth-token-123');
     });
+
+    it('handles image filenames with special regex characters safely', () => {
+      const inputHtml = '<div><img src="diagram (1)+v2[final].png"></div>';
+      const contents = [
+        { type: 'file', filename: 'diagram (1)+v2[final].png', fileurl: 'https://moodle.example.com/file.php/special' }
+      ];
+
+      const result = replaceRelativeImages(inputHtml, contents);
+      expect(result).toContain('https://moodle.example.com/file.php/special?token=mock-auth-token-123');
+    });
   });
 });

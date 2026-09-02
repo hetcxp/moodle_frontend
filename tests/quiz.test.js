@@ -115,5 +115,15 @@ describe('QuizService', () => {
       });
       expect(res.state).toBe('finished');
     });
+
+    it('sanitizes malicious script injections in question HTML', async () => {
+      const { sanitizeHtml } = await import('../src/utils/sanitize.js');
+      const maliciousHtml = '<div class="qtext">Pregunta de prueba</div><input type="text" name="resp"><script>window.__pwned = true;</script>';
+      const clean = sanitizeHtml(maliciousHtml, { allowFormControls: true });
+      expect(clean).toContain('Pregunta de prueba');
+      expect(clean).toContain('<input');
+      expect(clean).not.toContain('<script');
+      expect(clean).not.toContain('__pwned');
+    });
   });
 });

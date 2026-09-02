@@ -2,6 +2,7 @@ import { AuthService } from '../services/auth.js';
 import { PasswordService } from '../services/password.js';
 import { getTenantConfig } from '../config/tenant.js';
 import { createThemeSelector } from '../components/header.js';
+import { escapeHtml, sanitizeHtml } from '../utils/sanitize.js';
 
 export function renderChangePassword(container) {
   const tempSession = AuthService.getTempSession();
@@ -12,6 +13,7 @@ export function renderChangePassword(container) {
   }
   
   const config = getTenantConfig();
+  const safeFullName = escapeHtml(tempSession.fullname || tempSession.username || 'Usuario');
   
   container.innerHTML = `
     <div class="login-view">
@@ -20,7 +22,7 @@ export function renderChangePassword(container) {
         <div class="login-header">
           <img src="${config.logo}" alt="Logo" class="login-logo" onerror="this.style.display='none'">
           <h1>Actualiza tu contraseña</h1>
-          <p>Hola <strong>${tempSession.fullname}</strong>. Tu administrador ha solicitado que establezcas una nueva contraseña para continuar.</p>
+          <p>Hola <strong>${safeFullName}</strong>. Tu administrador ha solicitado que establezcas una nueva contraseña para continuar.</p>
         </div>
         
         <div id="change-error" class="error-message"></div>
@@ -86,7 +88,7 @@ export function renderChangePassword(container) {
         AuthService.clearTempSession();
         window.location.hash = '/dashboard';
       } else {
-        errorDiv.innerHTML = result.errormessage || 'Error al actualizar la contraseña.';
+        errorDiv.innerHTML = sanitizeHtml(result.errormessage || 'Error al actualizar la contraseña.');
         errorDiv.classList.add('show');
       }
     } catch (err) {

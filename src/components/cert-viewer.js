@@ -20,9 +20,9 @@ export function createCertViewer({ mod, certData, issuances, courseId }) {
     flex-direction: column;
     gap: 1.5rem;
     padding: 2rem;
-    background: var(--color-surface, #1e1e2e);
-    border: 1px solid var(--color-border, #333);
-    border-radius: 12px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card, 12px);
     max-width: 640px;
     margin: 0 auto;
   `;
@@ -35,7 +35,7 @@ export function createCertViewer({ mod, certData, issuances, courseId }) {
   iconWrap.style.cssText = `
     width: 56px; height: 56px;
     background: var(--color-primary-alpha, rgba(99,102,241,0.15));
-    border-radius: 12px;
+    border-radius: var(--radius-card, 12px);
     display: flex; align-items:center; justify-content:center;
     font-size: 1.75rem; flex-shrink:0;
   `;
@@ -44,11 +44,11 @@ export function createCertViewer({ mod, certData, issuances, courseId }) {
   const titleBlock = document.createElement('div');
   const title = document.createElement('h3');
   title.textContent = mod.name;
-  title.style.cssText = 'margin:0; font-size:1.2rem; font-weight:600; color: var(--color-text, #fff);';
+  title.style.cssText = 'margin:0; font-size:1.2rem; font-weight:600; color: var(--color-text-primary);';
 
   const subtitle = document.createElement('p');
   subtitle.textContent = 'Certificado de finalización';
-  subtitle.style.cssText = 'margin:0.25rem 0 0; font-size:0.85rem; color: var(--color-text-muted, #888);';
+  subtitle.style.cssText = 'margin:0.25rem 0 0; font-size:0.85rem; color: var(--color-text-secondary);';
 
   titleBlock.appendChild(title);
   titleBlock.appendChild(subtitle);
@@ -62,12 +62,12 @@ export function createCertViewer({ mod, certData, issuances, courseId }) {
     intro.className = 'cert-intro';
     intro.style.cssText = `
       font-size: 0.9rem;
-      color: var(--color-text-muted, #aaa);
+      color: var(--color-text-secondary);
       line-height: 1.6;
       padding: 1rem;
-      background: var(--color-surface-2, rgba(255,255,255,0.04));
+      background: var(--color-bg-hover, rgba(0,0,0,0.03));
       border-radius: 8px;
-      border: 1px solid var(--color-border, #333);
+      border: 1px solid var(--color-border);
     `;
     intro.innerHTML = sanitizeHtml(certData.intro);
     wrapper.appendChild(intro);
@@ -85,8 +85,8 @@ export function createCertViewer({ mod, certData, issuances, courseId }) {
     font-weight: 600;
     width: fit-content;
     ${hasIssuance
-      ? 'background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3);'
-      : 'background: rgba(148,163,184,0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2);'
+      ? 'background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3);'
+      : 'background: rgba(148,163,184,0.15); color: var(--color-text-secondary); border: 1px solid var(--color-border);'
     }
   `;
   badge.innerHTML = hasIssuance
@@ -103,7 +103,7 @@ export function createCertViewer({ mod, certData, issuances, courseId }) {
       border: 1px solid rgba(251,191,36,0.25);
       border-radius: 8px;
       font-size: 0.875rem;
-      color: #fbbf24;
+      color: #d97706;
       line-height: 1.5;
     `;
 
@@ -139,8 +139,8 @@ export function createCertViewer({ mod, certData, issuances, courseId }) {
     border: none;
     transition: opacity 0.2s, transform 0.15s;
     ${hasIssuance
-      ? 'background: var(--color-primary, #6366f1); color: #fff; opacity: 1;'
-      : 'background: var(--color-border, #333); color: var(--color-text-muted, #666); opacity: 0.6;'
+      ? 'background: var(--color-primary); color: #ffffff; opacity: 1;'
+      : 'background: var(--color-border); color: var(--color-text-secondary); opacity: 0.6;'
     }
   `;
   btnDownload.innerHTML = '<span>⬇</span><span>Descargar PDF</span>';

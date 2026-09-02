@@ -87,28 +87,16 @@ export function createCourseCard(course, onClick) {
   if (course.progress !== undefined && course.progress !== null) {
     const progressContainer = document.createElement('div');
     progressContainer.className = 'course-progress-container';
-    progressContainer.style.width = '100%';
-    progressContainer.style.height = '6px';
-    progressContainer.style.backgroundColor = '#e0e0e0';
-    progressContainer.style.borderRadius = '3px';
-    progressContainer.style.marginTop = '0.75rem';
-    progressContainer.style.overflow = 'hidden';
 
     const progressBar = document.createElement('div');
     progressBar.className = 'course-progress-bar';
     progressBar.style.width = `${course.progress}%`;
-    progressBar.style.height = '100%';
-    progressBar.style.backgroundColor = course.progress === 100 ? '#4caf50' : '#2196f3';
     if (course.progress === 100) {
       progressBar.classList.add('is-completed');
     }
     
     const progressText = document.createElement('div');
     progressText.className = 'course-progress-text';
-    progressText.style.fontSize = '0.75rem';
-    progressText.style.color = '#666';
-    progressText.style.marginTop = '0.25rem';
-    progressText.style.textAlign = 'right';
     progressText.textContent = `${Math.round(course.progress)}% completado`;
 
     progressContainer.appendChild(progressBar);

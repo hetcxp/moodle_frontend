@@ -1,16 +1,20 @@
 import { CourseService } from '../services/courses.js';
 import { createHeader } from '../components/header.js';
 import { createLoader } from '../components/loader.js';
-import { createQuizRunner } from '../components/quiz-runner.js';
-import { replacePluginfileUrls, replaceRelativeImages } from '../utils/image.js';
+import { createBookRenderer } from './course/renderers/book-renderer.js';
+import { createScormRenderer } from './course/renderers/scorm-renderer.js';
+import { createH5pRenderer } from './course/renderers/h5p-renderer.js';
+import { createAssignRenderer } from './course/renderers/assign-renderer.js';
+import { createResourceRenderer } from './course/renderers/resource-renderer.js';
+import { replacePluginfileUrls } from '../utils/image.js';
 import { sanitizeHtml, escapeHtml } from '../utils/sanitize.js';
-import { API_CONFIG } from '../config/api.js';
-import { AuthService } from '../services/auth.js';
+
+let moduleH5pCleanup = null;
 
 export async function renderCourse(container, courseId) {
-  if (window.h5pMessageListener) {
-    window.removeEventListener('message', window.h5pMessageListener);
-    window.h5pMessageListener = null;
+  if (typeof moduleH5pCleanup === 'function') {
+    moduleH5pCleanup();
+    moduleH5pCleanup = null;
   }
 
   container.innerHTML = '';
@@ -20,6 +24,13 @@ export async function renderCourse(container, courseId) {
   content.className = 'course-layout';
   content.appendChild(createLoader());
   container.appendChild(content);
+
+  const viewCleanup = () => {
+    if (typeof moduleH5pCleanup === 'function') {
+      moduleH5pCleanup();
+      moduleH5pCleanup = null;
+    }
+  };
 
   try {
     const contents = await CourseService.getCourseContents(courseId);
@@ -31,7 +42,7 @@ export async function renderCourse(container, courseId) {
       empty.className = 'empty-state';
       empty.textContent = 'Este curso no tiene contenido estructurado disponible.';
       content.appendChild(empty);
-      return;
+      return viewCleanup;
     }
 
     // Flatten all modules for next/prev navigation
@@ -48,10 +59,7 @@ export async function renderCourse(container, courseId) {
     let currentUpdateCompletionCard = null;
 
     // Listen to H5P xAPI messages from the iframe and auto-refresh completion state
-    if (window.h5pMessageListener) {
-      window.removeEventListener('message', window.h5pMessageListener);
-    }
-    window.h5pMessageListener = async (event) => {
+    const h5pListener = async (event) => {
       // 1. Handle H5P xAPI Tracking
       if (event.data && event.data.type === 'h5p_xapi') {
         const verb = event.data.verb;
@@ -114,7 +122,11 @@ export async function renderCourse(container, courseId) {
         }
       }
     };
-    window.addEventListener('message', window.h5pMessageListener);
+    window.addEventListener('message', h5pListener);
+    const cleanup = () => {
+      window.removeEventListener('message', h5pListener);
+    };
+    moduleH5pCleanup = cleanup;
 
     // Sidebar — oculta por defecto para evitar flash antes de renderMainContent(-1)
     const sidebar = document.createElement('aside');
@@ -269,9 +281,10 @@ export async function renderCourse(container, courseId) {
         contentContainer.appendChild(modTitle);
       }
 
-      const contentWrapper = document.createElement('div');
+      let contentWrapper;
 
       if (mod.modname === 'page') {
+        contentWrapper = document.createElement('div');
         const pageContent = await CourseService.getPageContent(courseId, mod.id);
         if (pageContent) {
           contentWrapper.className = 'resource-content page-content';
@@ -280,68 +293,19 @@ export async function renderCourse(container, courseId) {
           contentWrapper.innerHTML = '<p class="empty-state">No se pudo cargar el contenido.</p>';
         }
       } else if (mod.modname === 'scorm') {
-        contentWrapper.className = 'resource-content scorm-content';
-        let scormHtml = '<div class="scorm-container" style="padding: 2rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); margin-bottom: 2rem; text-align: center;">';
-        
-        if (mod.description) {
-          scormHtml += `
-            <div class="scorm-description" style="margin-bottom: 2rem; text-align: left;">
-              ${sanitizeHtml(replacePluginfileUrls(mod.description))}
-            </div>
-          `;
-        }
-        
-        contentWrapper.innerHTML = scormHtml + 'Cargando datos del SCORM...</div>';
-        
-        // Construct player URL directly
-        const baseUrl = mod.url.split('/view.php')[0];
-        const basePlayerUrl = `${baseUrl}/player.php?a=${mod.instance}&scoid=0&display=popup&mode=normal`;
-
-        // Fetch attempt count and autologin URL asynchronously
-        Promise.all([
-          CourseService.getScormAttemptCount(mod.instance),
-          CourseService.getAutoLoginUrl(basePlayerUrl)
-        ]).then(([attempts, playerUrl]) => {
-          let attemptsHtml = '';
-          if (attempts !== null) {
-            attemptsHtml = `
-              <div class="scorm-attempts" style="margin-bottom: 2rem; padding: 1rem; background: var(--bg-body); border-radius: 6px; display: inline-block;">
-                <strong>Intentos realizados:</strong> ${attempts}
-              </div>
-            `;
+        contentWrapper = createScormRenderer({
+          mod,
+          courseId,
+          onCompletionRefresh: async () => {
+            completionMap = await CourseService.getActivitiesCompletionStatus(courseId);
+            refreshSidebarBadges();
+            renderMainContent(modIndex);
           }
-          
-          const finalHtml = scormHtml + attemptsHtml + `
-            <div class="scorm-actions">
-              <button id="scorm-open-btn" class="btn-primary" style="display: inline-block; cursor: pointer;">
-                Abrir actividad SCORM
-              </button>
-              <p style="margin-top: 1rem; font-size: 0.9em; color: var(--text-muted);">
-                La actividad se abrirá en una nueva pestaña autenticada.
-              </p>
-            </div>
-          </div>`;
-          
-          contentWrapper.innerHTML = finalHtml;
-
-          document.getElementById('scorm-open-btn').addEventListener('click', async () => {
-            // Refresh the autologin URL each click (key expires in 60s)
-            const freshUrl = await CourseService.getAutoLoginUrl(basePlayerUrl);
-            const popup = window.open(freshUrl, '_blank');
-            if (!popup) return; // blocked by browser
-            const timer = setInterval(async () => {
-              if (popup.closed) {
-                clearInterval(timer);
-                completionMap = await CourseService.getActivitiesCompletionStatus(courseId);
-                refreshSidebarBadges();
-                renderMainContent(modIndex);
-              }
-            }, 1000);
-          });
-        }); // end Promise.all
-
+        });
       } else if (mod.modname === 'quiz') {
+        contentWrapper = document.createElement('div');
         contentWrapper.className = 'resource-content quiz-content';
+        const { createQuizRunner } = await import('../components/quiz-runner.js');
         const quizRunner = createQuizRunner(courseId, mod, async () => {
           completionMap = await CourseService.getActivitiesCompletionStatus(courseId);
           refreshSidebarBadges();
@@ -349,335 +313,42 @@ export async function renderCourse(container, courseId) {
         });
         contentWrapper.appendChild(quizRunner);
       } else if (mod.modname === 'book') {
-        contentWrapper.className = 'resource-content book-layout';
-        contentWrapper.style.cssText = 'display: flex; gap: 2rem; align-items: flex-start;';
-
-        const bookSidebar = document.createElement('div');
-        bookSidebar.className = 'book-sidebar';
-        bookSidebar.style.cssText = 'width: 250px; flex-shrink: 0; background: var(--color-surface); border-radius: 8px; border: 1px solid var(--color-border); padding: 1rem;';
-        
-        const bookContent = document.createElement('div');
-        bookContent.className = 'book-content-area';
-        bookContent.style.cssText = 'flex: 1; background: var(--color-surface); border-radius: 8px; border: 1px solid var(--color-border); padding: 2rem; min-height: 400px;';
-
-        if (!mod.contents || mod.contents.length === 0) {
-          bookContent.innerHTML = '<p class="empty-state">Este libro no tiene capítulos.</p>';
-        } else {
-          // Filtrar los html que son los capitulos
-          const chapters = mod.contents.filter(c => c.type === 'file' && c.filename.endsWith('.html') && c.filename !== 'index.html');
-          
-          // A veces Moodle exporta un index.html genérico, pero los capitulos son los demás. Si está vacío, usar todos.
-          const validChapters = chapters.length > 0 ? chapters : mod.contents.filter(c => c.type === 'file' && c.filename.endsWith('.html'));
-
-          let currentChapterIndex = 0;
-          const chapterTitles = validChapters.map((_, i) => `Cargando capítulo...`);
-          const htmlCache = {};
-
-          const renderBookSidebar = () => {
-            bookSidebar.innerHTML = '<h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Tabla de Contenidos</h3>';
-            const ul = document.createElement('ul');
-            ul.style.cssText = 'list-style: none; padding: 0; margin: 0;';
-            validChapters.forEach((chap, idx) => {
-              const li = document.createElement('li');
-              li.id = `book-chap-${idx}`;
-              li.style.cssText = `padding: 0.75rem 1rem; margin-bottom: 0.25rem; border-radius: 4px; cursor: pointer; color: ${idx === currentChapterIndex ? 'var(--color-primary)' : 'var(--color-text-primary)'}; background: ${idx === currentChapterIndex ? 'var(--color-bg-hover)' : 'transparent'}; font-weight: ${idx === currentChapterIndex ? '600' : '400'}; transition: all 0.2s;`;
-              
-              li.textContent = chapterTitles[idx];
-              li.onclick = () => renderChapter(idx);
-              ul.appendChild(li);
-            });
-            bookSidebar.appendChild(ul);
-          };
-
-          const renderChapter = async (idx) => {
-            currentChapterIndex = idx;
-            renderBookSidebar();
-            bookContent.innerHTML = '<div style="text-align:center; padding: 2rem;">Cargando capítulo...</div>';
-            
-            if (typeof window.scrollTo === 'function') window.scrollTo(0, 0);
-            if (typeof mainArea !== 'undefined' && typeof mainArea.scrollTo === 'function') mainArea.scrollTo(0, 0);
-            
-            const chap = validChapters[idx];
-            let html = htmlCache[idx];
-            
-            if (!html) {
-              html = await CourseService.fetchFileContent(chap.fileurl);
-              if (html) htmlCache[idx] = html;
-            }
-            
-            if (html) {
-              let finalHtml = replacePluginfileUrls(html);
-              finalHtml = replaceRelativeImages(finalHtml, mod.contents);
-              bookContent.innerHTML = sanitizeHtml(finalHtml);
-            } else {
-              bookContent.innerHTML = '<p class="empty-state">No se pudo cargar el capítulo.</p>';
-            }
-
-            // Navegacion dentro del libro
-            const bookNav = document.createElement('div');
-            bookNav.style.cssText = 'display: flex; justify-content: space-between; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--color-border);';
-            
-            const prevBtn = document.createElement('button');
-            prevBtn.className = 'btn-secondary';
-            prevBtn.textContent = 'Capítulo anterior';
-            prevBtn.disabled = idx === 0;
-            prevBtn.onclick = () => renderChapter(idx - 1);
-            
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'btn-primary';
-            nextBtn.textContent = 'Siguiente capítulo';
-            nextBtn.disabled = idx === validChapters.length - 1;
-            nextBtn.onclick = () => renderChapter(idx + 1);
-            
-            bookNav.appendChild(prevBtn);
-            bookNav.appendChild(nextBtn);
-            bookContent.appendChild(bookNav);
-          };
-
-          const loadAllTitles = async () => {
-            await Promise.all(validChapters.map(async (chap, idx) => {
-              const html = await CourseService.fetchFileContent(chap.fileurl);
-              if (html) {
-                htmlCache[idx] = html;
-                
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                
-                // Encontrar el primer elemento de contenido real
-                const firstContent = doc.querySelector('p, ul, ol, table, img');
-                const headings = Array.from(doc.querySelectorAll('h1, h2, h3, h4, h5, h6'));
-                
-                let validHeadings = headings;
-                if (firstContent) {
-                  validHeadings = headings.filter(h => {
-                    return (h.compareDocumentPosition(firstContent) & Node.DOCUMENT_POSITION_FOLLOWING);
-                  });
-                }
-                if (validHeadings.length === 0 && headings.length > 0) {
-                  validHeadings = [headings[0]];
-                }
-                
-                let title = '';
-                if (validHeadings.length > 0) {
-                  // Priorizar el heading más profundo (ej: H3 sobre H2 si ambos están al principio)
-                  let bestHeading = validHeadings[0];
-                  for (let i = 1; i < validHeadings.length; i++) {
-                    const currentTag = parseInt(bestHeading.tagName.replace('H', ''));
-                    const nextTag = parseInt(validHeadings[i].tagName.replace('H', ''));
-                    if (nextTag > currentTag) {
-                      bestHeading = validHeadings[i];
-                    }
-                  }
-                  title = bestHeading.textContent.trim();
-                } else {
-                  const strong = doc.querySelector('strong, b');
-                  if (strong) {
-                    // Check if it's before firstContent
-                    if (!firstContent || (strong.compareDocumentPosition(firstContent) & Node.DOCUMENT_POSITION_FOLLOWING)) {
-                      title = strong.textContent.trim();
-                    }
-                  }
-                }
-                
-                if (title.length > 0) {
-                  chapterTitles[idx] = title;
-                  const li = bookSidebar.querySelector(`#book-chap-${idx}`);
-                  if (li) li.textContent = title;
-                }
-                
-                // Si la extracción falla y aún dice "Cargando", ponerle "Capítulo X"
-                if (chapterTitles[idx] === 'Cargando capítulo...') {
-                   chapterTitles[idx] = `Capítulo ${idx + 1}`;
-                   const li = bookSidebar.querySelector(`#book-chap-${idx}`);
-                   if (li) li.textContent = chapterTitles[idx];
-                }
-              }
-            }));
-          };
-
-          renderChapter(0);
-          loadAllTitles();
-        }
-
-        contentWrapper.appendChild(bookSidebar);
-        contentWrapper.appendChild(bookContent);
-
+        contentWrapper = createBookRenderer({ mod, mainArea });
       } else if (mod.modname === 'assign') {
-        contentWrapper.className = 'resource-content assign-content';
-
-        // Fetch assign data con admin token (introfiles, intro, etc.)
-        const assignData = await CourseService.getAssignmentData(courseId, mod.id);
-
-        // --- Description ---
-        const description = (assignData && assignData.intro) || mod.description || mod.intro || '';
-        if (description) {
-          const descDiv = document.createElement('div');
-          descDiv.className = 'assign-description';
-          descDiv.style.cssText = 'margin-bottom: 1.5rem; padding: 1.5rem; background: var(--color-surface); border-radius: 8px; border: 1px solid var(--color-border); line-height: 1.7;';
-          descDiv.innerHTML = sanitizeHtml(replacePluginfileUrls(description));
-          contentWrapper.appendChild(descDiv);
-        }
-
-        // --- Archivos adjuntos: introfiles (WS) + introattachments + mod.contents (fallback) ---
-        const wsFiles = [
-          ...(assignData && assignData.introfiles || []),
-          ...(assignData && assignData.introattachments || []),
-        ];
-        const contentsFiles = (mod.contents || []).filter(c => c.type === 'file');
-        // Merge sin duplicados por filename
-        const seenNames = new Set();
-        const allFiles = [...wsFiles, ...contentsFiles].filter(f => {
-          if (seenNames.has(f.filename)) return false;
-          seenNames.add(f.filename);
-          return true;
-        });
-
-        if (allFiles.length > 0) {
-          const attachTitle = document.createElement('h3');
-          attachTitle.textContent = 'Archivos adjuntos';
-          attachTitle.style.cssText = 'font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem;';
-          contentWrapper.appendChild(attachTitle);
-
-          const fileList = document.createElement('ul');
-          fileList.style.cssText = 'list-style: none; padding: 0; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem;';
-          allFiles.forEach(f => {
-            const li = document.createElement('li');
-            const token = AuthService.getToken();
-            const fileUrl = f.fileurl + (f.fileurl.includes('?') ? '&' : '?') + `token=${token}`;
-            li.innerHTML = `<a href="${fileUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.5rem 1rem;background:var(--color-surface);border:1px solid var(--color-border);border-radius:6px;text-decoration:none;color:var(--color-primary);font-size:0.875rem;font-weight:500;">📎 ${f.filename}</a>`;
-            fileList.appendChild(li);
-          });
-          contentWrapper.appendChild(fileList);
-        }
-
-        // --- Botón de envío con autologin ---
-        const statusDiv = document.createElement('div');
-        statusDiv.style.cssText = 'margin-top: 0.5rem;';
-        const submitBtn = document.createElement('button');
-        submitBtn.className = 'btn-primary';
-        submitBtn.textContent = 'Ir a enviar tarea →';
-        submitBtn.onclick = async () => {
-          submitBtn.disabled = true;
-          submitBtn.textContent = 'Abriendo...';
-          const url = await CourseService.getAutoLoginUrl(mod.url);
-          window.open(url, '_blank');
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Ir a enviar tarea →';
-        };
-        statusDiv.appendChild(submitBtn);
-        contentWrapper.appendChild(statusDiv);
-
+        contentWrapper = await createAssignRenderer({ mod, courseId });
       } else if (mod.modname === 'forum') {
+        contentWrapper = document.createElement('div');
         contentWrapper.className = 'resource-content forum-content';
         const { createForumViewer } = await import('../components/forum-viewer.js');
         contentWrapper.appendChild(createForumViewer({ mod, courseId }));
-
       } else if (mod.modname === 'customcert') {
+        contentWrapper = document.createElement('div');
         contentWrapper.className = 'resource-content cert-content';
         const [{ createCertViewer }, { CertService }] = await Promise.all([
           import('../components/cert-viewer.js'),
           import('../services/cert.js')
         ]);
         const [certs, issuances] = await Promise.all([
-          CertService.getCertsByCoures(courseId),
+          CertService.getCertsByCourses(courseId),
           CertService.getIssuances(mod.instance)
         ]);
         const certData = certs.find(c => c.coursemodule == mod.id) || null;
         contentWrapper.appendChild(createCertViewer({ mod, certData, issuances, courseId }));
-
+      } else if (mod.modname === 'h5pactivity') {
+        contentWrapper = createH5pRenderer({ mod, courseId });
       } else if (mod.modname === 'resource') {
-        contentWrapper.className = 'resource-content file-content';
-        if (mod.contents && mod.contents.length > 0) {
-          const file = mod.contents.find(c => c.type === 'file');
-          if (file) {
-            const token = AuthService.getToken();
-            const fileUrl = file.fileurl + (file.fileurl.includes('?') ? '&' : '?') + `token=${token}`;
-            
-            if (file.mimetype === 'application/pdf') {
-              const iframe = document.createElement('iframe');
-              iframe.className = 'resource-content pdf-iframe';
-              iframe.src = fileUrl;
-              iframe.style.width = '100%';
-              iframe.style.minHeight = '80vh';
-              iframe.style.border = 'none';
-              contentWrapper.appendChild(iframe);
-            } else if (file.mimetype && file.mimetype.startsWith('image/')) {
-              const img = document.createElement('img');
-              img.src = fileUrl;
-              img.style.maxWidth = '100%';
-              img.style.height = 'auto';
-              img.style.display = 'block';
-              img.style.margin = '0 auto';
-              contentWrapper.appendChild(img);
-            } else if (file.mimetype && file.mimetype.startsWith('video/')) {
-              const video = document.createElement('video');
-              video.src = fileUrl;
-              video.controls = true;
-              video.style.maxWidth = '100%';
-              video.style.display = 'block';
-              video.style.margin = '0 auto';
-              contentWrapper.appendChild(video);
-            } else if (file.mimetype && file.mimetype.startsWith('audio/')) {
-              const audio = document.createElement('audio');
-              audio.src = fileUrl;
-              audio.controls = true;
-              audio.style.display = 'block';
-              audio.style.margin = '2rem auto';
-              contentWrapper.appendChild(audio);
-            } else {
-              contentWrapper.innerHTML = `
-                <div style="text-align: center; padding: 2rem;">
-                  <p>Este archivo no se puede previsualizar directamente.</p>
-                  <a href="${fileUrl}" target="_blank" rel="noopener" class="btn-primary" style="display:inline-block; margin-top: 1rem;">
-                    Descargar / Abrir ${file.filename}
-                  </a>
-                </div>
-              `;
-            }
-          } else {
-             contentWrapper.innerHTML = '<p class="empty-state">No se encontró ningún archivo en este recurso.</p>';
-          }
-        } else {
-          contentWrapper.innerHTML = '<p class="empty-state">Este recurso no tiene contenido disponible.</p>';
-        }
-
+        contentWrapper = createResourceRenderer({ mod });
       } else if (mod.url) {
-
+        contentWrapper = document.createElement('div');
         const iframe = document.createElement('iframe');
-        let embedUrl = mod.url;
-        
-        if (mod.modname === 'h5pactivity') {
-          // Use our custom local_headless h5p.php player redirection
-          // which forces the core H5P player in embedded layout WITH xAPI tracking enabled
-          const moodleBase = mod.url.split('/mod/')[0];
-          embedUrl = `${moodleBase}/local/headless/h5p.php?id=${mod.id}&token=${AuthService.getToken()}`;
-
-          // Fetch the H5P introduction (description) asynchronously and render it
-          CourseService.getH5pActivityIntro(courseId, mod.id).then(intro => {
-            if (intro) {
-              const descDiv = document.createElement('div');
-              descDiv.className = 'h5p-description';
-              descDiv.style.cssText = 'margin-bottom: 1.5rem; padding: 1.5rem; background: var(--color-surface); border-radius: 8px; border: 1px solid var(--color-border); line-height: 1.6;';
-              descDiv.innerHTML = sanitizeHtml(replacePluginfileUrls(intro));
-              contentWrapper.insertBefore(descDiv, iframe);
-            }
-          });
-          
-          iframe.className = 'resource-content h5p-iframe';
-          contentWrapper.appendChild(iframe);
-          iframe.src = embedUrl; // bypass autologin wrapper
-        } else {
-          // Para otros recursos, intentamos ocultar la interfaz con embed=1
-          embedUrl += (embedUrl.includes('?') ? '&' : '?') + 'embed=1';
-          iframe.className = 'resource-content';
-          contentWrapper.appendChild(iframe);
-          
-          CourseService.getAutoLoginUrl(embedUrl).then(autologinUrl => {
-            iframe.src = autologinUrl;
-          });
-        }
-
+        let embedUrl = mod.url + (mod.url.includes('?') ? '&' : '?') + 'embed=1';
+        iframe.className = 'resource-content';
+        contentWrapper.appendChild(iframe);
+        CourseService.getAutoLoginUrl(embedUrl).then(autologinUrl => {
+          iframe.src = autologinUrl;
+        });
       } else {
+        contentWrapper = document.createElement('div');
         contentWrapper.innerHTML = '<p class="empty-state">Este recurso no se puede visualizar directamente.</p>';
       }
 
@@ -703,14 +374,14 @@ export async function renderCourse(container, courseId) {
             completionscorerequired: 'Obtener un puntaje mínimo',
           };
 
-          const stateColor = comp.isoverallcomplete ? '#22c55e' : '#94a3b8';
+          const stateColor = comp.isoverallcomplete ? 'var(--color-success, #22c55e)' : 'var(--color-text-muted, #94a3b8)';
           const stateIcon  = comp.isoverallcomplete ? '✓' : '○';
           const stateText  = comp.isoverallcomplete ? 'Completado' : 'Pendiente';
 
           let criteriaHtml = comp.details.map(d => {
             const label = ruleLabels[d.rulename] || d.rulename;
             const ok = d.rulevalue.status === 1;
-            return `<li style="color: ${ok ? '#22c55e' : 'var(--color-text-secondary)'}; font-size: 0.875rem;">${ok ? '✓' : '○'} ${label}</li>`;
+            return `<li style="color: ${ok ? 'var(--color-success, #22c55e)' : 'var(--color-text-secondary)'}; font-size: 0.875rem;">${ok ? '✓' : '○'} ${label}</li>`;
           }).join('');
 
           compCard.innerHTML = `
@@ -865,10 +536,5 @@ export async function renderCourse(container, courseId) {
     `;
   }
 
-  return () => {
-    if (window.h5pMessageListener) {
-      window.removeEventListener('message', window.h5pMessageListener);
-      window.h5pMessageListener = null;
-    }
-  };
+  return viewCleanup;
 }

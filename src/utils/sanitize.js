@@ -1,3 +1,5 @@
+import DOMPurify from 'dompurify';
+
 /**
  * DOM Sanitization and HTML Escaping Utilities
  * Protects frontend views from XSS when rendering Moodle HTML contents.
@@ -39,21 +41,6 @@ export function decodeHtml(str) {
   return doc.body.textContent || '';
 }
 
-const DANGEROUS_TAGS = new Set([
-  'script',
-  'style',
-  'object',
-  'embed',
-  'link',
-  'meta',
-  'base',
-  'form',
-  'input',
-  'button',
-  'textarea',
-  'select'
-]);
-
 function cleanStyle(styleStr) {
   if (!styleStr) return '';
   const declarations = styleStr.split(';').map(d => d.trim()).filter(Boolean);
@@ -85,69 +72,50 @@ function cleanStyle(styleStr) {
 /**
  * Sanitizes dirty HTML string by stripping unsafe elements and attributes.
  * @param {string} dirtyHtml
+ * @param {{ allowFormControls?: boolean }} [options]
  * @returns {string}
  */
-export function sanitizeHtml(dirtyHtml) {
+export function sanitizeHtml(dirtyHtml, options = {}) {
   if (!dirtyHtml || typeof dirtyHtml !== 'string') return '';
 
-  if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
-    return dirtyHtml
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-      .replace(/\s*on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
-      .replace(/href\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*')/gi, 'href="#"')
-      .replace(/src\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*')/gi, 'src=""');
+  const purify = typeof DOMPurify.sanitize === 'function' 
+    ? DOMPurify 
+    : (typeof window !== 'undefined' ? DOMPurify(window) : null);
+
+  if (purify) {
+    const config = {
+      USE_PROFILES: { html: true, svg: false, mathMl: false },
+      FORBID_TAGS: options.allowFormControls 
+        ? ['script', 'object', 'embed', 'link', 'meta', 'base', 'iframe', 'applet']
+        : ['script', 'object', 'embed', 'link', 'meta', 'base', 'form', 'input', 'button', 'textarea', 'select', 'iframe', 'applet'],
+      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur', 'onchange', 'onsubmit'],
+      ALLOW_DATA_ATTR: false
+    };
+
+    const clean = purify.sanitize(dirtyHtml, config);
+
+    // Apply cleanStyle if DOMParser is available to harmonize Moodle inline styles
+    if (typeof window !== 'undefined' && typeof DOMParser !== 'undefined') {
+      const doc = new DOMParser().parseFromString(clean, 'text/html');
+      const styledElements = doc.body.querySelectorAll('[style]');
+      styledElements.forEach(el => {
+        const cleaned = cleanStyle(el.getAttribute('style') || '');
+        if (cleaned) {
+          el.setAttribute('style', cleaned);
+        } else {
+          el.removeAttribute('style');
+        }
+      });
+      return doc.body.innerHTML;
+    }
+    return clean;
   }
 
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(dirtyHtml, 'text/html');
-
-  function cleanNode(node) {
-    const toRemove = [];
-    for (const child of node.childNodes) {
-      if (child.nodeType === 1) { // ELEMENT_NODE
-        const tagName = child.tagName.toLowerCase();
-        if (DANGEROUS_TAGS.has(tagName)) {
-          toRemove.push(child);
-          continue;
-        }
-
-        // Clean legacy HTML presentation attributes
-        if (tagName === 'font') {
-          child.removeAttribute('color');
-          child.removeAttribute('face');
-          child.removeAttribute('size');
-        }
-        if (child.hasAttribute('bgcolor')) child.removeAttribute('bgcolor');
-        if (child.hasAttribute('text')) child.removeAttribute('text');
-        if (child.hasAttribute('background')) child.removeAttribute('background');
-
-        const attrs = Array.from(child.attributes);
-        for (const attr of attrs) {
-          const name = attr.name.toLowerCase();
-          const val = attr.value.trim().toLowerCase();
-          if (name.startsWith('on')) {
-            child.removeAttribute(attr.name);
-          } else if ((name === 'href' || name === 'src') && (val.startsWith('javascript:') || val.startsWith('vbscript:'))) {
-            child.removeAttribute(attr.name);
-          } else if (name === 'style') {
-            const cleanedStyle = cleanStyle(child.getAttribute('style') || '');
-            if (cleanedStyle) {
-              child.setAttribute('style', cleanedStyle);
-            } else {
-              child.removeAttribute('style');
-            }
-          }
-        }
-
-        cleanNode(child);
-      }
-    }
-    for (const el of toRemove) {
-      el.remove();
-    }
-  }
-
-  cleanNode(doc.body);
-  return doc.body.innerHTML;
+  // Fallback regex sanitizer
+  return dirtyHtml
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+    .replace(/\s*on\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    .replace(/href\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*')/gi, 'href="#"')
+    .replace(/src\s*=\s*(?:"javascript:[^"]*"|'javascript:[^']*')/gi, 'src=""');
 }

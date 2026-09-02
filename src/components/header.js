@@ -88,12 +88,20 @@ export function createThemeSelector() {
   });
 
   const closeDropdown = (e) => {
+    if (!document.contains(container)) {
+      document.removeEventListener('click', closeDropdown);
+      return;
+    }
     if (!container.contains(e.target)) {
       container.classList.remove('open');
     }
   };
 
   document.addEventListener('click', closeDropdown);
+
+  container.destroy = () => {
+    document.removeEventListener('click', closeDropdown);
+  };
 
   container.appendChild(toggleBtn);
   container.appendChild(dropdown);

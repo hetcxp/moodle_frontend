@@ -149,7 +149,8 @@ export function replaceRelativeImages(html, contents) {
       const joiner = cleanUrl.includes('?') ? '&' : '?';
       const authUrl = `${cleanUrl}${joiner}token=${token}`;
       
-      const regex = new RegExp(`src=["'][^"']*?${file.filename}["']`, 'gi');
+      const escapedFilename = file.filename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`src=["'][^"']*?${escapedFilename}["']`, 'gi');
       processedHtml = processedHtml.replace(regex, `src="${authUrl}"`);
     }
   });

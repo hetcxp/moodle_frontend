@@ -15,13 +15,15 @@ export const AuthService = {
   },
 
   async login(username, password) {
-    const tokenUrl = new URL(API_CONFIG.baseUrl + API_CONFIG.endpoints.login, window.location.origin);
-    tokenUrl.searchParams.append('username', username);
-    tokenUrl.searchParams.append('password', password);
-    tokenUrl.searchParams.append('service', API_CONFIG.serviceName);
+    const loginUrl = API_CONFIG.baseUrl + API_CONFIG.endpoints.login;
+    const bodyParams = new URLSearchParams();
+    bodyParams.append('username', username);
+    bodyParams.append('password', password);
+    bodyParams.append('service', API_CONFIG.serviceName);
 
-    const res = await fetch(tokenUrl.toString(), {
-      method: 'POST'
+    const res = await fetch(loginUrl, {
+      method: 'POST',
+      body: bodyParams
     });
     
     if (!res.ok) throw new Error('Network error during login');
@@ -33,12 +35,16 @@ export const AuthService = {
     const token = data.token;
     
     // 2. Get user info
-    const infoUrl = new URL(API_CONFIG.baseUrl + API_CONFIG.endpoints.rest, window.location.origin);
-    infoUrl.searchParams.append('wstoken', token);
-    infoUrl.searchParams.append('wsfunction', 'core_webservice_get_site_info');
-    infoUrl.searchParams.append('moodlewsrestformat', 'json');
+    const restUrl = API_CONFIG.baseUrl + API_CONFIG.endpoints.rest;
+    const infoBody = new URLSearchParams();
+    infoBody.append('wstoken', token);
+    infoBody.append('wsfunction', 'core_webservice_get_site_info');
+    infoBody.append('moodlewsrestformat', 'json');
     
-    const infoRes = await fetch(infoUrl.toString(), { method: 'POST' });
+    const infoRes = await fetch(restUrl, { 
+      method: 'POST',
+      body: infoBody
+    });
     const infoData = await infoRes.json();
     
     if (infoData.exception) throw new Error(infoData.message);
@@ -68,12 +74,16 @@ export const AuthService = {
 
   async loginWithToken(token) {
     // Usar el token para obtener la info del usuario
-    const infoUrl = new URL(API_CONFIG.baseUrl + API_CONFIG.endpoints.rest, window.location.origin);
-    infoUrl.searchParams.append('wstoken', token);
-    infoUrl.searchParams.append('wsfunction', 'core_webservice_get_site_info');
-    infoUrl.searchParams.append('moodlewsrestformat', 'json');
+    const restUrl = API_CONFIG.baseUrl + API_CONFIG.endpoints.rest;
+    const infoBody = new URLSearchParams();
+    infoBody.append('wstoken', token);
+    infoBody.append('wsfunction', 'core_webservice_get_site_info');
+    infoBody.append('moodlewsrestformat', 'json');
     
-    const infoRes = await fetch(infoUrl.toString(), { method: 'POST' });
+    const infoRes = await fetch(restUrl, { 
+      method: 'POST',
+      body: infoBody
+    });
     const infoData = await infoRes.json();
     
     if (infoData.exception) throw new Error(infoData.message);

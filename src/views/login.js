@@ -1,17 +1,20 @@
 import { AuthService } from '../services/auth.js';
 import { getTenantConfig } from '../config/tenant.js';
 import { createThemeSelector } from '../components/header.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 export function renderLogin(container) {
   const config = getTenantConfig();
+  const safeName = escapeHtml(config.name || 'Moodle');
+  const safeLogo = escapeHtml(config.logo || '');
   
   container.innerHTML = `
     <div class="login-view">
       <div class="login-top-bar" id="login-theme-slot"></div>
       <div class="card login-card">
         <div class="login-header">
-          <img src="${config.logo}" alt="Logo" class="login-logo" onerror="this.style.display='none'">
-          <h1>Bienvenido a ${config.name}</h1>
+          <img src="${safeLogo}" alt="Logo" class="login-logo" onerror="this.style.display='none'">
+          <h1>Bienvenido a ${safeName}</h1>
           <p>Ingresa tus credenciales para continuar</p>
         </div>
         

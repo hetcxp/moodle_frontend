@@ -1,9 +1,23 @@
+// @ts-check
 import { API_CONFIG } from '../config/api.js';
 import { AuthService } from './auth.js';
+
+/**
+ * @typedef {Object} AutoLoginKeyResponse
+ * @property {string} [key]
+ * @property {string} [autologinurl]
+ */
 
 export const MoodleApi = {
   /**
    * Ejecuta una llamada a la API REST de Moodle usando POST.
+   *
+   * @template T
+   * @param {string} wsfunction - Nombre del web service function de Moodle.
+   * @param {Record<string, any>} [params={}] - Parámetros de la consulta.
+   * @param {string|null} [customToken=null] - Token específico opcional.
+   * @returns {Promise<T>}
+   * @throws {Error} Si la petición falla o Moodle retorna una excepción.
    */
   async call(wsfunction, params = {}, customToken = null) {
     const isUsingUserToken = !customToken;
@@ -41,35 +55,28 @@ export const MoodleApi = {
   },
 
   /**
-   * Ejecuta una llamada con fallback al admin token si el token de usuario falla.
+   * Ejecuta una llamada tolerante a fallos retornando null en caso de error.
+   *
+   * @template T
+   * @param {string} wsfunction - Nombre del web service function de Moodle.
+   * @param {Record<string, any>} [params={}] - Parámetros de la consulta.
+   * @returns {Promise<T|null>}
    */
   async callWithFallback(wsfunction, params = {}) {
-    const userToken = AuthService.getToken();
-    if (userToken) {
-      try {
-        const result = await this.call(wsfunction, params, userToken);
-        if (result !== null && result !== undefined) {
-          return result;
-        }
-      } catch (e) {
-        // Fallback silencioso a admin token
-      }
+    try {
+      const result = await this.call(wsfunction, params);
+      return result ?? null;
+    } catch (e) {
+      console.warn(`callWithFallback for ${wsfunction} failed:`, e?.message || e);
+      return null;
     }
-
-    const adminToken = import.meta.env.VITE_MOODLE_ADMIN_TOKEN;
-    if (adminToken && adminToken !== userToken) {
-      try {
-        return await this.call(wsfunction, params, adminToken);
-      } catch (e) {
-        console.warn(`Admin fallback for ${wsfunction} failed:`, e);
-      }
-    }
-
-    return null;
   },
 
   /**
    * Genera la URL con autologin para Moodle.
+   *
+   * @param {string} targetUrl - URL destino interna de Moodle.
+   * @returns {Promise<string>}
    */
   async getAutoLoginUrl(targetUrl) {
     try {
@@ -79,7 +86,7 @@ export const MoodleApi = {
         const finalUrl = new URL(result.autologinurl);
         const user = AuthService.getUser();
         if (user) {
-          finalUrl.searchParams.append('userid', user.userid);
+          finalUrl.searchParams.append('userid', String(user.userid));
           finalUrl.searchParams.append('key', result.key);
           finalUrl.searchParams.append('urltogo', targetUrl);
           return finalUrl.toString();
@@ -91,3 +98,4 @@ export const MoodleApi = {
     return targetUrl;
   }
 };
+

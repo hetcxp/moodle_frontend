@@ -9,6 +9,7 @@
     "build:moodle": "vite build -c vite.moodle.config.js && node scripts/build-moodle.js",
     "preview": "vite preview",
     "test": "vitest run",
+    "typecheck": "tsc -p jsconfig.json",
     "moodle:upgrade": "/opt/homebrew/opt/php@8.3/bin/php /Users/hectorteran/Dev/moodle-dev/admin/cli/upgrade.php --non-interactive",
     "moodle:purge": "/opt/homebrew/opt/php@8.3/bin/php /Users/hectorteran/Dev/moodle-dev/admin/cli/purge_caches.php",
     "moodle:sync": "npm run build:moodle && npm run moodle:upgrade && npm run moodle:purge",
@@ -19,8 +20,12 @@
   "devDependencies": {
     "gh-pages": "^6.3.0",
     "jsdom": "^30.0.1",
+    "typescript": "^7.0.2",
     "vite": "^8.1.1",
     "vite-plugin-pwa": "^1.3.0",
     "vitest": "^4.1.11"
+  },
+  "dependencies": {
+    "dompurify": "^3.4.14"
   }
 }

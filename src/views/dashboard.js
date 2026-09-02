@@ -32,7 +32,7 @@ export async function renderDashboard(container) {
       document.body.appendChild(modal);
 
       try {
-        const contents = await CourseService.getCourseContents(course.id, true);
+        const contents = await CourseService.getCourseContents(course.id);
         
         let structureHtml = '';
         if (contents.length > 0) {

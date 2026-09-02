@@ -1,5 +1,7 @@
 import { QuizService } from '../services/quiz.js';
 import { createLoader } from './loader.js';
+import { sanitizeHtml } from '../utils/sanitize.js';
+import { replacePluginfileUrls } from '../utils/image.js';
 
 export function createQuizRunner(courseId, mod, onCompletionUpdate) {
   const container = document.createElement('div');
@@ -86,7 +88,7 @@ export function createQuizRunner(courseId, mod, onCompletionUpdate) {
     if (quiz.intro) {
       const introDiv = document.createElement('div');
       introDiv.className = 'quiz-intro-text';
-      introDiv.innerHTML = quiz.intro;
+      introDiv.innerHTML = sanitizeHtml(replacePluginfileUrls(quiz.intro));
       coverCard.appendChild(introDiv);
     }
 
@@ -273,7 +275,7 @@ export function createQuizRunner(courseId, mod, onCompletionUpdate) {
 
         const qBody = document.createElement('div');
         qBody.className = 'quiz-question-body';
-        qBody.innerHTML = q.html;
+        qBody.innerHTML = sanitizeHtml(q.html, { allowFormControls: true });
 
         // Custom styling & translation for "Clear my choice"
         qBody.querySelectorAll('.clearchoice, [class*="clearchoice"]').forEach(el => {
@@ -520,7 +522,7 @@ export function createQuizRunner(courseId, mod, onCompletionUpdate) {
 
         const qBody = document.createElement('div');
         qBody.className = 'quiz-question-body';
-        qBody.innerHTML = q.html;
+        qBody.innerHTML = sanitizeHtml(q.html, { allowFormControls: true });
         qBox.appendChild(qBody);
 
         reviewCard.appendChild(qBox);

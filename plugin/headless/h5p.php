@@ -24,9 +24,10 @@ $token = optional_param('token', '', PARAM_ALPHANUMEXT);
 if (!empty($token)) {
     global $DB, $CFG;
     $usertoken = $DB->get_record('external_tokens', ['token' => $token]);
-    if ($usertoken) {
+    if ($usertoken && ($usertoken->validuntil == 0 || $usertoken->validuntil > time())) {
         $user = core_user::get_user($usertoken->userid);
         if ($user) {
+            core_user::require_active_user($user, true, true);
             complete_user_login($user);
             \core\session\manager::apply_concurrent_login_limit($user->id, session_id());
             

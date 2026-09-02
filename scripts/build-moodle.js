@@ -7,7 +7,6 @@ const __dirname = path.dirname(__filename);
 
 // Rutas
 const uiDir = path.resolve(__dirname, '..', 'plugin', 'headlessui');
-const srcPluginDir = path.resolve(__dirname, '..', 'src_moodle_plugin');
 const appDir = path.join(uiDir, 'app');
 
 function copyRecursiveSync(src, dest) {

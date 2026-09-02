@@ -47,6 +47,9 @@ export class Router {
         return; // Guard handled the navigation
       }
 
+      this._navEpoch = (this._navEpoch || 0) + 1;
+      const currentEpoch = this._navEpoch;
+
       // Cleanup previous view if destructor was registered
       if (typeof this.currentCleanup === 'function') {
         try {
@@ -68,11 +71,19 @@ export class Router {
       const result = matchRoute.action(matchParams);
       if (result instanceof Promise) {
         result.then(cleanup => {
+          if (this._navEpoch !== currentEpoch) {
+            // Stale route action resolved after another navigation started
+            if (typeof cleanup === 'function') cleanup();
+            else if (cleanup && typeof cleanup.destroy === 'function') cleanup.destroy();
+            return;
+          }
           if (typeof cleanup === 'function' || (cleanup && typeof cleanup.destroy === 'function')) {
             this.currentCleanup = cleanup;
           }
         }).catch(err => {
-          console.error('Route action error:', err);
+          if (this._navEpoch === currentEpoch) {
+            console.error('Route action error:', err);
+          }
         });
       } else if (typeof result === 'function' || (result && typeof result.destroy === 'function')) {
         this.currentCleanup = result;

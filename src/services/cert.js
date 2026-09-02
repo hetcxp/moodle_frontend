@@ -6,11 +6,15 @@ export const CertService = {
    * Obtiene todos los customcerts de un curso.
    * Retorna array con metadatos (nombre, intro, coursemodule, id, etc.)
    */
-  async getCertsByCoures(courseId) {
+  async getCertsByCourses(courseId) {
     const result = await MoodleApi.callWithFallback('mod_customcert_get_customcerts_by_courses', {
       'courseids[0]': courseId
     });
     return result?.customcerts || [];
+  },
+
+  async getCertsByCoures(courseId) {
+    return this.getCertsByCourses(courseId);
   },
 
   /**

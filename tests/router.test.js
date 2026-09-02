@@ -74,4 +74,41 @@ describe('Router Lifecycle and Navigation', () => {
     expect(guard).toHaveBeenCalled();
     expect(guardedAction).not.toHaveBeenCalled();
   });
+
+  it('prevents race conditions when an earlier async route resolves after a fast navigation', async () => {
+    let resolveSlowAction;
+    const slowCleanup = vi.fn();
+    const fastCleanup = vi.fn();
+
+    const slowAction = vi.fn().mockImplementation(() => {
+      return new Promise((resolve) => {
+        resolveSlowAction = () => resolve(slowCleanup);
+      });
+    });
+
+    const fastAction = vi.fn().mockReturnValue(fastCleanup);
+
+    router = new Router([
+      { path: '/slow', action: slowAction },
+      { path: '/fast', action: fastAction }
+    ]);
+
+    // 1. Navigate to /slow
+    window.location.hash = '#/slow';
+    router.handleHashChange();
+    expect(slowAction).toHaveBeenCalledTimes(1);
+
+    // 2. Quickly navigate to /fast before /slow resolves
+    window.location.hash = '#/fast';
+    router.handleHashChange();
+    expect(fastAction).toHaveBeenCalledTimes(1);
+
+    // 3. Now slow action finishes later
+    resolveSlowAction();
+    await new Promise((r) => setTimeout(r, 10));
+
+    // Stale slowCleanup should be immediately discarded/cleaned up and NOT overwrite active router cleanup
+    expect(slowCleanup).toHaveBeenCalledTimes(1);
+    expect(router.currentCleanup).toBe(fastCleanup);
+  });
 });

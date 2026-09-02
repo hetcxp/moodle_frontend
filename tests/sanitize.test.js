@@ -73,6 +73,40 @@ describe('Sanitize & Escape Utilities', () => {
       expect(sanitizeHtml(null)).toBe('');
       expect(sanitizeHtml(undefined)).toBe('');
     });
+
+    it('neutralizes SVG and MathML script payloads', () => {
+      const dirty = '<svg><script>alert("svg-xss")</script><circle cx="50" cy="50" r="40"/></svg>';
+      const clean = sanitizeHtml(dirty);
+      expect(clean).not.toContain('<script');
+      expect(clean).not.toContain('alert');
+    });
+
+    it('allows form controls in quiz mode while neutralizing scripts', () => {
+      const quizHtml = `
+        <div class="qtext">¿Cuál es la respuesta correcta?</div>
+        <div class="answer">
+          <input type="radio" name="q1" id="q1_a" value="1" onclick="steal()">
+          <label for="q1_a">Opción A</label>
+        </div>
+        <script>alert('pwned')</script>
+      `;
+      const clean = sanitizeHtml(quizHtml, { allowFormControls: true });
+      expect(clean).toContain('<input');
+      expect(clean).toContain('type="radio"');
+      expect(clean).toContain('<label');
+      expect(clean).not.toContain('onclick');
+      expect(clean).not.toContain('steal()');
+      expect(clean).not.toContain('<script');
+      expect(clean).not.toContain('alert');
+    });
+
+    it('strips form controls in standard mode', () => {
+      const summary = '<p>Curso de prueba</p><input type="text" value="secret"><button>Enviar</button>';
+      const clean = sanitizeHtml(summary);
+      expect(clean).not.toContain('<input');
+      expect(clean).not.toContain('<button');
+      expect(clean).toContain('<p>Curso de prueba</p>');
+    });
   });
 
   describe('decodeHtml', () => {

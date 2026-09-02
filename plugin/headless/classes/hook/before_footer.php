@@ -33,11 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
             clearInterval(interval);
             window.H5P.externalDispatcher.on('xAPI', function (event) {
 
-                // Send a message to the parent window
+                // Send a message to the parent window with targeted origin
+                const targetOrigin = (document.referrer) ? new URL(document.referrer).origin : window.location.origin;
                 window.parent.postMessage({
                     type: 'h5p_xapi',
                     verb: event.getVerb()
-                }, '*');
+                }, targetOrigin);
             });
         }
         attempts++;

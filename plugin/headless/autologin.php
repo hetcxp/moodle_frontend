@@ -23,6 +23,20 @@ $key = required_param('key', PARAM_ALPHANUMEXT);
 $urltogo = optional_param('urltogo', $CFG->wwwroot, PARAM_URL);
 $urltogo = $urltogo ?: $CFG->wwwroot;
 
+// Prevenir Open Redirect: validar que pertenezca a la misma instancia Moodle
+$parsed_urltogo = parse_url($urltogo);
+$parsed_wwwroot = parse_url($CFG->wwwroot);
+$is_safe = false;
+if (empty($parsed_urltogo['host'])) {
+    $is_safe = true; // Ruta relativa
+} else if (isset($parsed_urltogo['host'], $parsed_wwwroot['host']) &&
+           strtolower($parsed_urltogo['host']) === strtolower($parsed_wwwroot['host'])) {
+    $is_safe = true;
+}
+if (!$is_safe) {
+    $urltogo = $CFG->wwwroot;
+}
+
 $context = context_system::instance();
 $PAGE->set_context($context);
 
