@@ -41,11 +41,12 @@ describe('PasswordService & ChangePassword View', () => {
         message: 'Password changed successfully'
       });
 
-      const res = await PasswordService.change('NewSuperSecret123!');
+      const mockPassword = 'MockPassword123!';
+      const res = await PasswordService.change(mockPassword);
 
       expect(apiSpy).toHaveBeenCalledWith(
         'local_headless_change_password',
-        { newpassword: 'NewSuperSecret123!' },
+        { newpassword: mockPassword },
         'temp-token-999'
       );
       expect(res.success).toBe(true);

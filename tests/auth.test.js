@@ -41,19 +41,19 @@ describe('AuthService', () => {
         return Promise.reject(new Error('Unknown URL: ' + urlStr));
       });
 
-      const result = await AuthService.login('demo_user', 'super_secret_password_123');
+      const result = await AuthService.login('demo_user', 'mock_password_123');
 
       expect(result).toBe(true);
       expect(loginRequest).not.toBeNull();
       // Ensure password is NOT in URL query params
-      expect(loginRequest.url).not.toContain('super_secret_password_123');
+      expect(loginRequest.url).not.toContain('mock_password_123');
       expect(loginRequest.url).not.toContain('demo_user');
       
       // Ensure password is in POST body (URLSearchParams)
       expect(loginRequest.options.method).toBe('POST');
       expect(loginRequest.options.body).toBeInstanceOf(URLSearchParams);
       expect(loginRequest.options.body.get('username')).toBe('demo_user');
-      expect(loginRequest.options.body.get('password')).toBe('super_secret_password_123');
+      expect(loginRequest.options.body.get('password')).toBe('mock_password_123');
 
       // Check session storage
       expect(AuthService.getToken()).toBe('mock-valid-token-xyz');
@@ -120,22 +120,22 @@ describe('AuthService', () => {
         return Promise.reject(new Error('Unknown URL: ' + urlStr));
       });
 
-      const result = await AuthService.loginWithToken('sso-token-abc-123');
+      const result = await AuthService.loginWithToken('mock_sso_token');
 
       expect(result).toBe(true);
       expect(infoRequest).not.toBeNull();
       // Ensure token is NOT in URL query string
-      expect(infoRequest.url).not.toContain('sso-token-abc-123');
+      expect(infoRequest.url).not.toContain('mock_sso_token');
       expect(infoRequest.url).not.toContain('wstoken');
 
       // Ensure token is in POST body
       expect(infoRequest.options.method).toBe('POST');
       expect(infoRequest.options.body).toBeInstanceOf(URLSearchParams);
-      expect(infoRequest.options.body.get('wstoken')).toBe('sso-token-abc-123');
+      expect(infoRequest.options.body.get('wstoken')).toBe('mock_sso_token');
       expect(infoRequest.options.body.get('wsfunction')).toBe('core_webservice_get_site_info');
 
       // Check session storage
-      expect(AuthService.getToken()).toBe('sso-token-abc-123');
+      expect(AuthService.getToken()).toBe('mock_sso_token');
       expect(AuthService.getUser().userid).toBe(88);
       expect(AuthService.isAuthenticated()).toBe(true);
     });

@@ -53,7 +53,7 @@ describe('MoodleApi Service', () => {
     it('returns formatted autologin url when key is successfully fetched', async () => {
       vi.spyOn(AuthService, 'getUser').mockReturnValue({ userid: 42 });
       vi.spyOn(MoodleApi, 'call').mockResolvedValue({
-        key: 'secret-key-abc',
+        key: 'mock-autologin-key',
         autologinurl: 'https://moodle.example.com/local/headless/autologin.php'
       });
 
@@ -61,7 +61,7 @@ describe('MoodleApi Service', () => {
       const result = await MoodleApi.getAutoLoginUrl(target);
 
       expect(result).toContain('userid=42');
-      expect(result).toContain('key=secret-key-abc');
+      expect(result).toContain('key=mock-autologin-key');
       expect(result).toContain(encodeURIComponent(target));
     });
 
