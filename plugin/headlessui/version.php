@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_headlessui';
-$plugin->version   = 2026082800; // YYYYMMDD00
+$plugin->version   = 2026090400; // YYYYMMDD00
 $plugin->requires  = 2022041900;
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.0';
+$plugin->release   = '2.0.1';
