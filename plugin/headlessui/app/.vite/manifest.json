@@ -1,6 +1,6 @@
 {
   "index.html": {
-    "file": "assets/index-BnGkhJyK.js",
+    "file": "assets/index-e4bZHf-7.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
@@ -15,7 +15,7 @@
     ]
   },
   "src/components/cert-viewer.js": {
-    "file": "assets/cert-viewer-BRWumT1f.js",
+    "file": "assets/cert-viewer-BROTZzMY.js",
     "name": "cert-viewer",
     "src": "src/components/cert-viewer.js",
     "isDynamicEntry": true,
@@ -25,7 +25,7 @@
     ]
   },
   "src/components/forum-viewer.js": {
-    "file": "assets/forum-viewer-DddCgC90.js",
+    "file": "assets/forum-viewer-DSlvU_vY.js",
     "name": "forum-viewer",
     "src": "src/components/forum-viewer.js",
     "isDynamicEntry": true,
@@ -34,7 +34,7 @@
     ]
   },
   "src/components/quiz-runner.js": {
-    "file": "assets/quiz-runner-DKFilcpo.js",
+    "file": "assets/quiz-runner-UJbwUFn6.js",
     "name": "quiz-runner",
     "src": "src/components/quiz-runner.js",
     "isDynamicEntry": true,
@@ -43,7 +43,7 @@
     ]
   },
   "src/services/cert.js": {
-    "file": "assets/cert-UKemq3KJ.js",
+    "file": "assets/cert-BWsvqKgM.js",
     "name": "cert",
     "src": "src/services/cert.js",
     "isDynamicEntry": true,
