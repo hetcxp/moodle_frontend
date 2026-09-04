@@ -1,6 +1,7 @@
 import { CourseService } from '../../../services/courses.js';
 import { replacePluginfileUrls } from '../../../utils/image.js';
 import { sanitizeHtml } from '../../../utils/sanitize.js';
+import { logger } from '../../../utils/logger.js';
 
 /**
  * Renders an interactive Moodle SCORM activity with attempt tracking and autologin player popup.
@@ -73,7 +74,7 @@ export function createScormRenderer({ mod, courseId, onCompletionRefresh }) {
       });
     }
   }).catch((err) => {
-    console.error('Error initializing SCORM renderer:', err);
+    logger.error('Error initializing SCORM renderer:', err);
     contentWrapper.innerHTML = '<p class="empty-state">No se pudo cargar la actividad SCORM.</p>';
   });
 

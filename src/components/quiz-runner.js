@@ -2,6 +2,7 @@ import { QuizService } from '../services/quiz.js';
 import { createLoader } from './loader.js';
 import { sanitizeHtml } from '../utils/sanitize.js';
 import { replacePluginfileUrls } from '../utils/image.js';
+import { logger } from '../utils/logger.js';
 
 export function createQuizRunner(courseId, mod, onCompletionUpdate) {
   const container = document.createElement('div');
@@ -38,7 +39,7 @@ export function createQuizRunner(courseId, mod, onCompletionUpdate) {
         renderCoverScreen(quiz, attempts);
       }
     } catch (err) {
-      console.error('Error initializing quiz runner:', err);
+      logger.error('Error initializing quiz runner:', err);
       renderError('Ocurrió un error al conectar con el servidor de exámenes.');
     }
   }
@@ -190,7 +191,7 @@ export function createQuizRunner(courseId, mod, onCompletionUpdate) {
                 return;
               }
             } catch (errRefetch) {
-              console.error('Error recovering active attempt:', errRefetch);
+              logger.error('Error recovering active attempt:', errRefetch);
             }
           }
           alert('No se pudo iniciar el examen. ' + (e.message || ''));
@@ -216,7 +217,7 @@ export function createQuizRunner(courseId, mod, onCompletionUpdate) {
       const data = await QuizService.getAttemptData(attemptId, page);
       renderAttemptPage(attemptId, page, data);
     } catch (e) {
-      console.error('Error loading attempt page:', e);
+      logger.error('Error loading attempt page:', e);
       renderError('No se pudieron cargar las preguntas del intento.');
     }
   }
@@ -471,7 +472,7 @@ export function createQuizRunner(courseId, mod, onCompletionUpdate) {
       }
       renderReviewScreen(review);
     } catch (e) {
-      console.error('Error loading review:', e);
+      logger.error('Error loading review:', e);
       renderError('Ocurrió un error al cargar la revisión del examen.');
     }
   }

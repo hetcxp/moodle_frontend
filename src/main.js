@@ -7,6 +7,7 @@ import { renderLogin } from './views/login.js';
 import { renderDashboard } from './views/dashboard.js';
 import { renderCourse } from './views/course.js';
 import { renderChangePassword } from './views/change-password.js';
+import { logger } from './utils/logger.js';
 
 const appContainer = document.getElementById('app');
 
@@ -71,7 +72,7 @@ async function init() {
     try {
       await AuthService.loginWithToken(window.HEADLESS_CONFIG.token);
     } catch (err) {
-      console.error("Auto-login failed:", err);
+      logger.error("Auto-login failed:", err);
     }
   }
 

@@ -1,5 +1,6 @@
 import { MoodleApi } from './moodle-api.js';
 import { AuthService } from './auth.js';
+import { logger } from '../utils/logger.js';
 
 export const PasswordService = {
   async change(newpassword) {
@@ -15,7 +16,7 @@ export const PasswordService = {
       
       return response;
     } catch (e) {
-      console.error('Failed to change password', e);
+      logger.error('Failed to change password', e);
       return { success: false, errormessage: e.message || 'Error de conexión' };
     }
   }

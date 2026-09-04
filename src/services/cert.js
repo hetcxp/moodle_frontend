@@ -1,5 +1,6 @@
 import { MoodleApi } from './moodle-api.js';
 import { AuthService } from './auth.js';
+import { logger } from '../utils/logger.js';
 
 export const CertService = {
   /**
@@ -30,7 +31,7 @@ export const CertService = {
       });
       return result?.issues || [];
     } catch (e) {
-      console.error('CertService.getIssuances failed', e);
+      logger.error('CertService.getIssuances failed', e);
       return [];
     }
   },
@@ -62,7 +63,7 @@ export const CertService = {
         return;
       }
     } catch (e) {
-      console.warn('CertService.downloadPdf fetch failed, falling back to autologin', e);
+      logger.warn('CertService.downloadPdf fetch failed, falling back to autologin', e);
     }
 
     // Fallback: autologin en nueva pestaña

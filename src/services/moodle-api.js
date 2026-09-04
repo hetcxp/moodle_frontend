@@ -1,6 +1,7 @@
 // @ts-check
 import { API_CONFIG } from '../config/api.js';
 import { AuthService } from './auth.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * @typedef {Object} AutoLoginKeyResponse
@@ -67,7 +68,7 @@ export const MoodleApi = {
       const result = await this.call(wsfunction, params);
       return result ?? null;
     } catch (e) {
-      console.warn(`callWithFallback for ${wsfunction} failed:`, e?.message || e);
+      logger.warn(`callWithFallback for ${wsfunction} failed:`, e?.message || e);
       return null;
     }
   },
@@ -93,7 +94,7 @@ export const MoodleApi = {
         }
       }
     } catch (e) {
-      console.warn('Autologin key fetch failed, fallback to direct url', e);
+      logger.warn('Autologin key fetch failed, fallback to direct url', e);
     }
     return targetUrl;
   }

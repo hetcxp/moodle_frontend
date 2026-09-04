@@ -1,6 +1,7 @@
 // @ts-check
 import { MoodleApi } from './moodle-api.js';
 import { AuthService } from './auth.js';
+import { logger } from '../utils/logger.js';
 
 export const CourseService = {
   /**
@@ -51,7 +52,7 @@ export const CourseService = {
 
       return courseList;
     } catch (e) {
-      console.error('Failed to fetch enrolled courses', e);
+      logger.error('Failed to fetch enrolled courses', e);
       return [];
     }
   },
@@ -70,7 +71,7 @@ export const CourseService = {
       });
       return result.courses || [];
     } catch (e) {
-      console.error('Failed to fetch visible courses', e);
+      logger.error('Failed to fetch visible courses', e);
       return [];
     }
   },
@@ -129,7 +130,7 @@ export const CourseService = {
       });
       return Array.isArray(contents) ? contents : [];
     } catch (e) {
-      console.error(`Failed to fetch contents for course ${courseId}`, e);
+      logger.error(`Failed to fetch contents for course ${courseId}`, e);
       return [];
     }
   },
@@ -169,7 +170,7 @@ export const CourseService = {
       });
       return result.attemptscount !== undefined ? result.attemptscount : (result.attempts || 0);
     } catch (e) {
-      console.error(`Failed to fetch SCORM attempt count for scormId ${scormId}`, e);
+      logger.error(`Failed to fetch SCORM attempt count for scormId ${scormId}`, e);
       return null;
     }
   },
@@ -201,7 +202,7 @@ export const CourseService = {
       (result.statuses || []).forEach(s => { map[s.cmid] = s; });
       return map;
     } catch (e) {
-      console.error('Failed to fetch completion status', e);
+      logger.error('Failed to fetch completion status', e);
       return {};
     }
   },
@@ -220,7 +221,7 @@ export const CourseService = {
       });
       return true;
     } catch (e) {
-      console.error('Failed to mark activity complete', e);
+      logger.error('Failed to mark activity complete', e);
       return false;
     }
   },
@@ -278,7 +279,7 @@ export const CourseService = {
         return await response.text();
       }
     } catch (e) {
-      console.error('Failed to fetch file content', e);
+      logger.error('Failed to fetch file content', e);
     }
     return null;
   }

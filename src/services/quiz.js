@@ -1,5 +1,6 @@
 import { MoodleApi } from './moodle-api.js';
 import { AuthService } from './auth.js';
+import { logger } from '../utils/logger.js';
 
 export const QuizService = {
   async getQuiz(courseId, mod) {
@@ -24,7 +25,7 @@ export const QuizService = {
       });
       return response.attempts || [];
     } catch (e) {
-      console.warn(`Attempt fetching with userid failed for quizId ${quizId}, retrying with minimal params:`, e);
+      logger.warn(`Attempt fetching with userid failed for quizId ${quizId}, retrying with minimal params:`, e);
       try {
         const fallback = await MoodleApi.call('mod_quiz_get_user_attempts', {
           quizid: quizId,
@@ -33,7 +34,7 @@ export const QuizService = {
         });
         return fallback.attempts || [];
       } catch (e2) {
-        console.error(`Failed to fetch user attempts for quizId ${quizId}:`, e2);
+        logger.error(`Failed to fetch user attempts for quizId ${quizId}:`, e2);
         return [];
       }
     }
@@ -46,7 +47,7 @@ export const QuizService = {
       });
       return response.attempt || null;
     } catch (e) {
-      console.error(`Error starting attempt for quizId ${quizId}:`, e);
+      logger.error(`Error starting attempt for quizId ${quizId}:`, e);
       throw e;
     }
   },
@@ -59,7 +60,7 @@ export const QuizService = {
       });
       return response;
     } catch (e) {
-      console.error(`Error getting attempt data for attemptId ${attemptId}, page ${page}:`, e);
+      logger.error(`Error getting attempt data for attemptId ${attemptId}, page ${page}:`, e);
       throw e;
     }
   },
@@ -76,7 +77,7 @@ export const QuizService = {
       const response = await MoodleApi.call('mod_quiz_save_attempt', params);
       return response.status || false;
     } catch (e) {
-      console.error(`Error saving attempt ${attemptId}:`, e);
+      logger.error(`Error saving attempt ${attemptId}:`, e);
       return false;
     }
   },
@@ -95,7 +96,7 @@ export const QuizService = {
       const response = await MoodleApi.call('mod_quiz_process_attempt', params);
       return response;
     } catch (e) {
-      console.error(`Error processing attempt ${attemptId}:`, e);
+      logger.error(`Error processing attempt ${attemptId}:`, e);
       throw e;
     }
   },
@@ -108,7 +109,7 @@ export const QuizService = {
       });
       return response;
     } catch (e) {
-      console.error(`Error fetching attempt review for attemptId ${attemptId}:`, e);
+      logger.error(`Error fetching attempt review for attemptId ${attemptId}:`, e);
       return null;
     }
   }

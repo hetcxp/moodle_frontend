@@ -1,5 +1,6 @@
 import { MoodleApi } from './moodle-api.js';
 import { AuthService } from './auth.js';
+import { logger } from '../utils/logger.js';
 
 export const ForumService = {
   async getForumId(courseId, cmId, instanceHint) {
@@ -26,7 +27,7 @@ export const ForumService = {
         warnings: res.warnings || [],
       };
     } catch (e) {
-      console.error('ForumService.getDiscussions error', e);
+      logger.error('ForumService.getDiscussions error', e);
       return { discussions: [], warnings: [] };
     }
   },
@@ -38,7 +39,7 @@ export const ForumService = {
       });
       return res.posts || [];
     } catch (e) {
-      console.error('ForumService.getPosts error', e);
+      logger.error('ForumService.getPosts error', e);
       return [];
     }
   },
@@ -53,7 +54,7 @@ export const ForumService = {
       });
       return res;
     } catch (e) {
-      console.error('ForumService.addDiscussion error', e);
+      logger.error('ForumService.addDiscussion error', e);
       throw e;
     }
   },
@@ -67,7 +68,7 @@ export const ForumService = {
       });
       return res;
     } catch (e) {
-      console.error('ForumService.addPost error', e);
+      logger.error('ForumService.addPost error', e);
       throw e;
     }
   },

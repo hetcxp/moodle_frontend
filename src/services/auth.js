@@ -47,7 +47,9 @@ export const AuthService = {
     });
     const infoData = await infoRes.json();
     
-    if (infoData.exception) throw new Error(infoData.message);
+    if (!infoRes.ok || infoData.exception || infoData.error || infoData.errorcode || !infoData.userid) {
+      throw new Error(infoData.message || infoData.error || 'Error al obtener información de usuario');
+    }
     
     if (infoData.userisforcedpasswordchange) {
       sessionStorage.setItem('moodle_temp_session', JSON.stringify({
@@ -86,7 +88,9 @@ export const AuthService = {
     });
     const infoData = await infoRes.json();
     
-    if (infoData.exception) throw new Error(infoData.message);
+    if (!infoRes.ok || infoData.exception || infoData.error || infoData.errorcode || !infoData.userid) {
+      throw new Error(infoData.message || infoData.error || 'Token de sesión inválido');
+    }
     
     // Save session
     sessionStorage.setItem('moodle_token', token);
