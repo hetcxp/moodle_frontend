@@ -68,6 +68,14 @@ describe('Sanitize & Escape Utilities', () => {
       expect(clean).toContain('margin-bottom: 10px');
     });
 
+    it('neutralizes background-image and font-family overrides in inline styles', () => {
+      const dirty = '<div style="background-image: url(evil.jpg); font-family: Comic Sans; display: flex;"><p>Content</p></div>';
+      const clean = sanitizeHtml(dirty);
+      expect(clean).not.toContain('background-image');
+      expect(clean).not.toContain('Comic Sans');
+      expect(clean).toContain('display: flex');
+    });
+
     it('handles empty or non-string inputs safely', () => {
       expect(sanitizeHtml('')).toBe('');
       expect(sanitizeHtml(null)).toBe('');

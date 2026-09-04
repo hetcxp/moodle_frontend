@@ -139,6 +139,28 @@ describe('AuthService', () => {
       expect(AuthService.getUser().userid).toBe(88);
       expect(AuthService.isAuthenticated()).toBe(true);
     });
+
+    it('rejects when token is invalid or site info request fails', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: false,
+        status: 401,
+        json: () => Promise.resolve({ errorcode: 'invalidtoken' })
+      });
+
+      await expect(AuthService.loginWithToken('bad-token')).rejects.toThrow();
+      expect(AuthService.isAuthenticated()).toBe(false);
+    });
+
+    it('rejects and leaves user unauthenticated when login credentials fail', async () => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ error: 'Datos erróneos. Por favor, inténtelo otra vez.' })
+      });
+
+      await expect(AuthService.login('bad_user', 'bad_pass')).rejects.toThrow();
+      expect(AuthService.isAuthenticated()).toBe(false);
+      expect(AuthService.getToken()).toBeNull();
+    });
   });
 
   describe('logout', () => {

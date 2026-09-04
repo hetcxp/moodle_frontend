@@ -111,4 +111,35 @@ describe('Router Lifecycle and Navigation', () => {
     expect(slowCleanup).toHaveBeenCalledTimes(1);
     expect(router.currentCleanup).toBe(fastCleanup);
   });
+
+  it('matches wildcard route when no specific route matches', () => {
+    const notFoundAction = vi.fn();
+    window.location.hash = '#/non-existent-route';
+    router = new Router([
+      { path: '/home', action: vi.fn() },
+      { path: '*', action: notFoundAction }
+    ]);
+
+    expect(notFoundAction).toHaveBeenCalledTimes(1);
+  });
+
+  it('tolerates error thrown inside cleanup function without breaking navigation', () => {
+    const faultyCleanup = vi.fn().mockImplementation(() => {
+      throw new Error('Cleanup exploded');
+    });
+    const action1 = vi.fn().mockReturnValue(faultyCleanup);
+    const action2 = vi.fn();
+
+    router = new Router([
+      { path: '/first', action: action1 },
+      { path: '/second', action: action2 }
+    ]);
+
+    window.location.hash = '#/first';
+    router.handleHashChange();
+
+    window.location.hash = '#/second';
+    expect(() => router.handleHashChange()).not.toThrow();
+    expect(action2).toHaveBeenCalledTimes(1);
+  });
 });
