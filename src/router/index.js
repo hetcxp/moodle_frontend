@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger.js';
+
 export class Router {
   constructor(routes) {
     this.routes = routes;
@@ -12,6 +14,19 @@ export class Router {
     this.handleHashChange();
   }
 
+  _safeInvokeCleanup(cleanup) {
+    if (!cleanup) return;
+    try {
+      if (typeof cleanup === 'function') {
+        cleanup();
+      } else if (typeof cleanup.destroy === 'function') {
+        cleanup.destroy();
+      }
+    } catch (err) {
+      logger.warn('Error during route cleanup:', err);
+    }
+  }
+
   handleHashChange() {
     const hash = window.location.hash.slice(1) || '/';
     const path = hash.split('?')[0];
@@ -23,23 +38,27 @@ export class Router {
       if (r.path === '*') continue;
       // Convert /path/:id to regex
       const paramNames = [];
-      const regexPath = r.path.replace(/:([^\/]+)/g, (_, key) => {
+      const regexPath = r.path.replace(/:([a-zA-Z0-9_]+)/g, (_, key) => {
         paramNames.push(key);
         return '([^/]+)';
       });
       const regex = new RegExp(`^${regexPath}$`);
       const match = path.match(regex);
+
       if (match) {
         matchRoute = r;
-        paramNames.forEach((name, i) => {
-          matchParams[name] = match[i + 1];
+        paramNames.forEach((name, index) => {
+          matchParams[name] = match[index + 1];
         });
         break;
       }
     }
 
     if (!matchRoute) {
-      matchRoute = this.routes.find(r => r.path === '*');
+      const wildcardRoute = this.routes.find(r => r.path === '*');
+      if (wildcardRoute) {
+        matchRoute = wildcardRoute;
+      }
     }
 
     if (matchRoute) {
@@ -51,19 +70,8 @@ export class Router {
       const currentEpoch = this._navEpoch;
 
       // Cleanup previous view if destructor was registered
-      if (typeof this.currentCleanup === 'function') {
-        try {
-          this.currentCleanup();
-        } catch (err) {
-          console.warn('Error during route cleanup:', err);
-        }
-        this.currentCleanup = null;
-      } else if (this.currentCleanup && typeof this.currentCleanup.destroy === 'function') {
-        try {
-          this.currentCleanup.destroy();
-        } catch (err) {
-          console.warn('Error during route cleanup:', err);
-        }
+      if (this.currentCleanup) {
+        this._safeInvokeCleanup(this.currentCleanup);
         this.currentCleanup = null;
       }
 
@@ -73,8 +81,7 @@ export class Router {
         result.then(cleanup => {
           if (this._navEpoch !== currentEpoch) {
             // Stale route action resolved after another navigation started
-            if (typeof cleanup === 'function') cleanup();
-            else if (cleanup && typeof cleanup.destroy === 'function') cleanup.destroy();
+            this._safeInvokeCleanup(cleanup);
             return;
           }
           if (typeof cleanup === 'function' || (cleanup && typeof cleanup.destroy === 'function')) {
@@ -82,7 +89,7 @@ export class Router {
           }
         }).catch(err => {
           if (this._navEpoch === currentEpoch) {
-            console.error('Route action error:', err);
+            logger.error('Route action error:', err);
           }
         });
       } else if (typeof result === 'function' || (result && typeof result.destroy === 'function')) {
@@ -98,11 +105,7 @@ export class Router {
   destroy() {
     window.removeEventListener('hashchange', this._onHashChange);
     window.removeEventListener('load', this._onHashChange);
-    if (typeof this.currentCleanup === 'function') {
-      this.currentCleanup();
-    } else if (this.currentCleanup && typeof this.currentCleanup.destroy === 'function') {
-      this.currentCleanup.destroy();
-    }
+    this._safeInvokeCleanup(this.currentCleanup);
     this.currentCleanup = null;
   }
 }

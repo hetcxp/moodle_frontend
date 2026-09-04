@@ -1,3 +1,21 @@
+/**
+ * @typedef {Object} TenantColors
+ * @property {string} primary - Primary accent color hex.
+ * @property {string} accent - Secondary highlight color hex.
+ * @property {string} surface - Card and modal background color hex.
+ * @property {string} background - App background color hex.
+ */
+
+/**
+ * @typedef {Object} TenantConfig
+ * @property {string} name - Brand/tenant display name.
+ * @property {string} [moodleUrl] - Base Moodle server URL.
+ * @property {string} serviceName - Web service shortname.
+ * @property {TenantColors} colors - Palette color configuration.
+ * @property {string} [logo] - URL to brand logo image.
+ */
+
+/** @type {Record<string, TenantConfig>} */
 export const TENANTS = {
   default: {
     name: 'Moodle Academy',
@@ -13,6 +31,12 @@ export const TENANTS = {
   }
 };
 
+/**
+ * Resolves current tenant configuration merging URL parameters, environment defaults,
+ * and optional injected runtime window.HEADLESS_CONFIG.
+ *
+ * @returns {TenantConfig} Resolved tenant configuration object.
+ */
 export function getTenantConfig() {
   const params = new URLSearchParams(window.location.search);
   const tenantKey = params.get('tenant') || import.meta.env.VITE_TENANT || 'default';
@@ -28,6 +52,12 @@ export function getTenantConfig() {
   return baseConfig;
 }
 
+/**
+ * Injects tenant CSS custom properties into :root element if an active non-default
+ * tenant with custom color palettes is selected.
+ *
+ * @returns {TenantConfig} The active tenant config that was applied.
+ */
 export function applyTenantTheme() {
   const config = getTenantConfig();
   const root = document.documentElement;

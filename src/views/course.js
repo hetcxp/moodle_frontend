@@ -1,13 +1,16 @@
 import { CourseService } from '../services/courses.js';
 import { createHeader } from '../components/header.js';
 import { createLoader } from '../components/loader.js';
-import { createBookRenderer } from './course/renderers/book-renderer.js';
-import { createScormRenderer } from './course/renderers/scorm-renderer.js';
-import { createH5pRenderer } from './course/renderers/h5p-renderer.js';
-import { createAssignRenderer } from './course/renderers/assign-renderer.js';
-import { createResourceRenderer } from './course/renderers/resource-renderer.js';
+import {
+  createBookRenderer,
+  createScormRenderer,
+  createH5pRenderer,
+  createAssignRenderer,
+  createResourceRenderer
+} from './course/renderers/index.js';
 import { replacePluginfileUrls } from '../utils/image.js';
 import { sanitizeHtml, escapeHtml } from '../utils/sanitize.js';
+import { logger } from '../utils/logger.js';
 
 let moduleH5pCleanup = null;
 
@@ -160,7 +163,7 @@ export async function renderCourse(container, courseId) {
       try {
         completionMap = await CourseService.getActivitiesCompletionStatus(courseId);
       } catch (err) {
-        console.error('Error refreshing completion status:', err);
+        logger.error('Error refreshing completion status:', err);
       }
 
       mainArea.innerHTML = '';
