@@ -2,25 +2,33 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import puppeteer from 'puppeteer-core';
+import { loadEnv } from './env-helper.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
+
+// Cargar variables de entorno desde .env si están disponibles
+loadEnv(projectRoot);
 
 const args = process.argv.slice(2);
 const urlArgIndex = args.indexOf('--url');
 const targetUrl = urlArgIndex !== -1 && args[urlArgIndex + 1] ? args[urlArgIndex + 1] : (process.env.MOODLE_URL || 'https://lts.academyfactory.online');
 
 const isLocal = targetUrl.includes('localhost') || targetUrl.includes('127.0.0.1');
-const defaultUser = isLocal ? 'admin' : 'hteran';
+const defaultUser = isLocal ? (process.env.MOODLE_LOCAL_USER || 'admin') : 'hteran';
 
 const CONFIG = {
   baseUrl: targetUrl.replace(/\/+$/, ''),
-  user: process.env.MOODLE_USER || defaultUser,
-  pass: process.env.MOODLE_PASS || '@Rotceh84',
+  user: isLocal ? (process.env.MOODLE_LOCAL_USER || 'admin') : (process.env.MOODLE_USER || defaultUser),
+  pass: isLocal ? (process.env.MOODLE_LOCAL_PASS || process.env.MOODLE_PASS) : process.env.MOODLE_PASS,
   chromeExecutable: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   headless: process.env.HEADLESS !== 'false'
 };
+
+if (!CONFIG.pass) {
+  throw new Error('Variable de entorno MOODLE_PASS no configurada. Define MOODLE_PASS en .env o entorno.');
+}
 
 const scratchDir = path.resolve(projectRoot, 'scratch');
 if (!fs.existsSync(scratchDir)) {
@@ -78,7 +86,7 @@ async function loginMoodle(page) {
 
 (async () => {
   console.log('===============================================================');
-  console.log('  VALIDACIÓN E2E DE PLUGIN UNIFICADO: local_headlessui v3.0.0');
+  console.log('  VALIDACIÓN E2E DE PLUGIN UNIFICADO: local_headlessui v3.0.2');
   console.log('===============================================================');
   console.log(`Host: ${CONFIG.baseUrl}`);
 
@@ -91,6 +99,11 @@ async function loginMoodle(page) {
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 900 });
 
+  const pageErrors = [];
+  page.on('pageerror', err => {
+    pageErrors.push(err.message);
+  });
+
   const results = [];
 
   try {
@@ -99,7 +112,7 @@ async function loginMoodle(page) {
     // -------------------------------------------------------------
     // CHECK 1: Lista de Plugins (/admin/plugins.php)
     // -------------------------------------------------------------
-    console.log('\n[Check 1/6] Verificando plugins instalados en /admin/plugins.php...');
+    console.log('\n[Check 1/8] Verificando plugins instalados en /admin/plugins.php...');
     await page.goto(`${CONFIG.baseUrl}/admin/plugins.php`, { waitUntil: 'networkidle2', timeout: 60000 });
 
     const pluginsStatus = await page.evaluate(() => {
@@ -118,7 +131,7 @@ async function loginMoodle(page) {
     console.log(`  local_headless detectado:   ${pluginsStatus.oldHeadless ? 'PRESENTE: ' + pluginsStatus.oldHeadless : 'NO (Eliminado)'}`);
 
     results.push({
-      name: 'Plugin list: solo local_headlessui v3.0.0',
+      name: 'Plugin list: solo local_headlessui activo',
       success: check1Success,
       details: pluginsStatus
     });
@@ -126,8 +139,7 @@ async function loginMoodle(page) {
     // -------------------------------------------------------------
     // CHECK 2: Servicio Web headless_service y sus funciones
     // -------------------------------------------------------------
-    console.log('\n[Check 2/6] Verificando funciones en headless_service (/admin/webservice/service_functions.php)...');
-    // Primero obtener el ID de headless_service desde /admin/settings.php?section=externalservices
+    console.log('\n[Check 2/8] Verificando funciones en headless_service (/admin/webservice/service_functions.php)...');
     await page.goto(`${CONFIG.baseUrl}/admin/settings.php?section=externalservices`, { waitUntil: 'networkidle2', timeout: 60000 });
 
     const serviceFunctionsUrl = await page.evaluate(() => {
@@ -161,7 +173,6 @@ async function loginMoodle(page) {
       console.log(`  Funciones encontradas: ${serviceDetails}`);
     } else {
       console.warn('  ⚠️ No se pudo localizar el enlace directo a headless_service en la lista de servicios.');
-      // Verificar si al menos existe el servicio en la tabla
       const hasHeadlessService = await page.evaluate(() => document.body.innerText.includes('Headless Service'));
       serviceDetails = `Headless Service presente en tabla: ${hasHeadlessService}`;
       check2Success = hasHeadlessService;
@@ -176,7 +187,7 @@ async function loginMoodle(page) {
     // -------------------------------------------------------------
     // CHECK 3: Carga de App Frontend (/local/headlessui/index.php)
     // -------------------------------------------------------------
-    console.log('\n[Check 3/6] Verificando carga del Frontend en /local/headlessui/index.php...');
+    console.log('\n[Check 3/8] Verificando carga del Frontend en /local/headlessui/index.php...');
     const appResponse = await page.goto(`${CONFIG.baseUrl}/local/headlessui/index.php`, {
       waitUntil: 'networkidle2',
       timeout: 60000
@@ -199,7 +210,7 @@ async function loginMoodle(page) {
     // -------------------------------------------------------------
     // CHECK 4: Endpoint de Autologin (/local/headlessui/autologin.php)
     // -------------------------------------------------------------
-    console.log('\n[Check 4/6] Verificando endpoint /local/headlessui/autologin.php...');
+    console.log('\n[Check 4/8] Verificando endpoint /local/headlessui/autologin.php...');
     const autologinResponse = await page.goto(`${CONFIG.baseUrl}/local/headlessui/autologin.php`, {
       waitUntil: 'networkidle2',
       timeout: 30000
@@ -208,23 +219,25 @@ async function loginMoodle(page) {
     const autologinStatus = autologinResponse ? autologinResponse.status() : 0;
     const autologinBody = await page.evaluate(() => document.body.innerText);
     const autologinHtml = await page.content();
-    // Un llamado sin parámetros debe procesarse por Moodle (missing parameter), nunca un PHP fatal error / parse error
-    const check4Success = !autologinBody.includes('Fatal error') &&
-                          !autologinBody.includes('Parse error') &&
-                          !autologinHtml.includes('PHP Fatal error') &&
-                          (autologinHtml.includes('moodle_exception') || autologinBody.includes('parameter') || autologinStatus < 500);
-    console.log(`  HTTP Status: ${autologinStatus}, Sin Fatal Error: ${check4Success}`);
+
+    // Verificación estricta: NO debe ser un 404 de Nginx/Apache ni un PHP fatal error. Debe provenir de Moodle.
+    const isMoodleResponse4 = (autologinHtml.includes('moodle') || autologinHtml.includes('yui') || autologinHtml.includes('navbar') || autologinBody.includes('Moodle'));
+    const isNginxOrWebServer404_4 = autologinHtml.includes('nginx') && autologinStatus === 404;
+    const hasFatalPhp4 = autologinBody.includes('Fatal error') || autologinBody.includes('Parse error') || autologinHtml.includes('PHP Fatal error');
+    const check4Success = isMoodleResponse4 && !isNginxOrWebServer404_4 && !hasFatalPhp4;
+
+    console.log(`  HTTP Status: ${autologinStatus}, Moodle Response: ${isMoodleResponse4}, Sin Fatal: ${!hasFatalPhp4}, No Nginx 404: ${!isNginxOrWebServer404_4}`);
 
     results.push({
-      name: 'Autologin endpoint: accesible y sin errores fatales PHP',
+      name: 'Autologin endpoint: procesado por Moodle y sin errores fatales',
       success: check4Success,
-      details: `status=${autologinStatus}`
+      details: `status=${autologinStatus}, isMoodle=${isMoodleResponse4}`
     });
 
     // -------------------------------------------------------------
     // CHECK 5: Endpoint de H5P Bridge (/local/headlessui/h5p.php)
     // -------------------------------------------------------------
-    console.log('\n[Check 5/6] Verificando endpoint /local/headlessui/h5p.php...');
+    console.log('\n[Check 5/8] Verificando endpoint /local/headlessui/h5p.php...');
     const h5pResponse = await page.goto(`${CONFIG.baseUrl}/local/headlessui/h5p.php`, {
       waitUntil: 'networkidle2',
       timeout: 30000
@@ -233,22 +246,24 @@ async function loginMoodle(page) {
     const h5pStatus = h5pResponse ? h5pResponse.status() : 0;
     const h5pBody = await page.evaluate(() => document.body.innerText);
     const h5pHtml = await page.content();
-    const check5Success = !h5pBody.includes('Fatal error') &&
-                          !h5pBody.includes('Parse error') &&
-                          !h5pHtml.includes('PHP Fatal error') &&
-                          (h5pHtml.includes('moodle_exception') || h5pBody.includes('parameter') || h5pStatus < 500);
-    console.log(`  HTTP Status: ${h5pStatus}, Sin Fatal Error: ${check5Success}`);
+
+    const isMoodleResponse5 = (h5pHtml.includes('moodle') || h5pHtml.includes('yui') || h5pHtml.includes('navbar') || h5pBody.includes('Moodle'));
+    const isNginxOrWebServer404_5 = h5pHtml.includes('nginx') && h5pStatus === 404;
+    const hasFatalPhp5 = h5pBody.includes('Fatal error') || h5pBody.includes('Parse error') || h5pHtml.includes('PHP Fatal error');
+    const check5Success = isMoodleResponse5 && !isNginxOrWebServer404_5 && !hasFatalPhp5;
+
+    console.log(`  HTTP Status: ${h5pStatus}, Moodle Response: ${isMoodleResponse5}, Sin Fatal: ${!hasFatalPhp5}, No Nginx 404: ${!isNginxOrWebServer404_5}`);
 
     results.push({
-      name: 'H5P bridge: accesible y sin errores fatales PHP',
+      name: 'H5P bridge: procesado por Moodle y sin errores fatales',
       success: check5Success,
-      details: `status=${h5pStatus}`
+      details: `status=${h5pStatus}, isMoodle=${isMoodleResponse5}`
     });
 
     // -------------------------------------------------------------
-    // CHECK 6: Configuración Admin (Site Administration > Plugins > Local plugins)
+    // CHECK 6: Configuración Admin
     // -------------------------------------------------------------
-    console.log('\n[Check 6/6] Verificando enlace admin en /admin/category.php?category=localplugins...');
+    console.log('\n[Check 6/8] Verificando enlace admin en /admin/category.php?category=localplugins...');
     let settingsResponse = await page.goto(`${CONFIG.baseUrl}/admin/category.php?category=localplugins`, {
       waitUntil: 'networkidle2',
       timeout: 30000
@@ -260,7 +275,6 @@ async function loginMoodle(page) {
       return links.some(a => (a.innerText.includes('Headless UI') || (a.href && a.href.includes('/local/headlessui/index.php'))));
     });
 
-    // Fallback: verificar en la búsqueda de administración si la categoría directa redirige
     if (!settingsHasLink) {
       console.log('  Buscando enlace en /admin/search.php?query=Headless+UI...');
       await page.goto(`${CONFIG.baseUrl}/admin/search.php?query=Headless+UI`, {
@@ -280,6 +294,72 @@ async function loginMoodle(page) {
       name: 'Settings Admin: página de configuración accesible',
       success: check6Success,
       details: `status=${settingsStatus}, settingsHasLink=${settingsHasLink}`
+    });
+
+    // -------------------------------------------------------------
+    // CHECK 7: Auditoría de Rutas en Bundle Compilado
+    // -------------------------------------------------------------
+    console.log('\n[Check 7/8] Auditando bundle compilado para detectar rutas legadas (/local/headless/)...');
+    const assetsDir = path.resolve(projectRoot, 'plugin', 'headlessui', 'app', 'assets');
+    let hasLegacyRoute = false;
+    let checkedAssetsCount = 0;
+
+    if (fs.existsSync(assetsDir)) {
+      const assetFiles = fs.readdirSync(assetsDir);
+      for (const file of assetFiles) {
+        if (file.endsWith('.js') || file.endsWith('.css')) {
+          checkedAssetsCount++;
+          const content = fs.readFileSync(path.join(assetsDir, file), 'utf8');
+          // Buscar "/local/headless/" sin "ui"
+          const legacyMatch = content.match(/\/local\/headless\/(?!ui)/);
+          if (legacyMatch) {
+            hasLegacyRoute = true;
+            console.error(`  ❌ Ruta legada encontrada en asset ${file}: ${legacyMatch[0]}`);
+          }
+        }
+      }
+    }
+
+    const check7Success = !hasLegacyRoute && checkedAssetsCount > 0;
+    console.log(`  Assets analizados: ${checkedAssetsCount}, Sin rutas obsoletas: ${!hasLegacyRoute}`);
+
+    results.push({
+      name: 'Auditoría de bundle: sin referencias a /local/headless/',
+      success: check7Success,
+      details: `checked=${checkedAssetsCount}, hasLegacyRoute=${hasLegacyRoute}`
+    });
+
+    // -------------------------------------------------------------
+    // CHECK 8: Navegación SPA y Renderers en Cliente
+    // -------------------------------------------------------------
+    console.log('\n[Check 8/8] Verificando navegación SPA y ausencia de errores JS en runtime...');
+    pageErrors.length = 0; // reset
+    const testCourseRoute = isLocal ? '/local/headlessui/index.php#/course/43' : '/local/headlessui/index.php#/course/276';
+    
+    await page.goto(`${CONFIG.baseUrl}${testCourseRoute}`, {
+      waitUntil: 'networkidle2',
+      timeout: 45000
+    });
+
+    await new Promise(r => setTimeout(r, 2000));
+
+    const spaMounted = await page.evaluate(() => {
+      return !!document.querySelector('#app') &&
+             (!!document.querySelector('.course-layout') || !!document.querySelector('.dashboard') || !!document.querySelector('header'));
+    });
+
+    const hasNoCriticalJsErrors = pageErrors.length === 0;
+    if (!hasNoCriticalJsErrors) {
+      console.warn(`  ⚠️ Errores de consola en navegación SPA: ${pageErrors.join(' | ')}`);
+    }
+
+    const check8Success = spaMounted && hasNoCriticalJsErrors;
+    console.log(`  SPA Montado: ${spaMounted}, Sin errores de consola: ${hasNoCriticalJsErrors}`);
+
+    results.push({
+      name: 'Navegación SPA: vista cargada sin errores de consola',
+      success: check8Success,
+      details: `spaMounted=${spaMounted}, errors=${pageErrors.length}`
     });
 
   } catch (err) {
@@ -307,8 +387,8 @@ async function loginMoodle(page) {
   }
 
   console.log('===============================================================');
-  if (allPassed && results.length === 6) {
-    console.log('🎉 TODOS LOS CRITERIOS PASARON EXITOSAMENTE (6/6).');
+  if (allPassed && results.length === 8) {
+    console.log('🎉 TODOS LOS CRITERIOS PASARON EXITOSAMENTE (8/8).');
     process.exit(0);
   } else {
     console.error(`❌ VALIDACIÓN FALLIDA: Solo ${results.filter(r => r.success).length}/${results.length} criterios superados.`);

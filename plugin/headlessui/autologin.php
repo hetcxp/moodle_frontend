@@ -34,11 +34,17 @@ if (isset($_SERVER['DOCUMENT_ROOT'])) {
     $config_paths[] = $_SERVER['DOCUMENT_ROOT'] . '/../config.php';
     $config_paths[] = $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 }
+$loaded = false;
 foreach ($config_paths as $path) {
     if (file_exists($path)) {
         require_once($path);
+        $loaded = true;
         break;
     }
+}
+
+if (!$loaded) {
+    die("Error: No se pudo encontrar config.php. El plugin debe estar instalado en /local/headlessui/ dentro de Moodle.");
 }
 
 $userid = required_param('userid', PARAM_INT);
@@ -64,7 +70,7 @@ $context = context_system::instance();
 $PAGE->set_context($context);
 
 if (isloggedin() and !isguestuser()) {
-    delete_user_key('tool_mobile', $userid);
+    delete_user_key('local_headlessui', $userid);
     if ($USER->id == $userid) {
         redirect($urltogo);
     } else {
@@ -72,9 +78,9 @@ if (isloggedin() and !isguestuser()) {
     }
 }
 
-// Custom check for local plugin, skipping the strict HTTPS check of the mobile app
-$key = validate_user_key($key, 'tool_mobile', null);
-delete_user_key('tool_mobile', $userid);
+// Custom check for local plugin, isolated from tool_mobile
+$key = validate_user_key($key, 'local_headlessui', null);
+delete_user_key('local_headlessui', $userid);
 
 if ($key->userid != $userid) {
     throw new moodle_exception('invalidkey');

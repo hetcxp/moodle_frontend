@@ -103,4 +103,23 @@ describe('Automated Verification of Views & Security', () => {
 
     if (typeof cleanup === 'function') cleanup();
   });
+
+  it('Compiled assets in plugin/headlessui/app/assets contain no legacy /local/headless/ routes', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const assetsDir = path.resolve(process.cwd(), 'plugin/headlessui/app/assets');
+
+    if (fs.existsSync(assetsDir)) {
+      const files = fs.readdirSync(assetsDir);
+      expect(files.length).toBeGreaterThan(0);
+
+      for (const file of files) {
+        if (file.endsWith('.js') || file.endsWith('.css')) {
+          const content = fs.readFileSync(path.join(assetsDir, file), 'utf8');
+          const legacyMatches = content.match(/\/local\/headless\/(?!ui)/g);
+          expect(legacyMatches).toBeNull();
+        }
+      }
+    }
+  });
 });

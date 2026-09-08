@@ -3,10 +3,14 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import puppeteer from 'puppeteer-core';
+import { loadEnv } from './env-helper.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
+
+// Cargar variables de entorno desde .env si están disponibles
+loadEnv(projectRoot);
 
 // -------------------------------------------------------------
 // Configuración y Parámetros
@@ -19,10 +23,14 @@ const TARGET_PLUGIN = args.find((arg, i) => args[i - 1] === '--plugin') || null;
 const CONFIG = {
   baseUrl: (process.env.MOODLE_URL || 'https://lts.academyfactory.online').replace(/\/+$/, ''),
   user: process.env.MOODLE_USER || 'hteran',
-  pass: process.env.MOODLE_PASS || '@Rotceh84',
+  pass: process.env.MOODLE_PASS,
   chromeExecutable: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   headless: process.env.HEADLESS !== 'false'
 };
+
+if (!CONFIG.pass) {
+  throw new Error('Variable de entorno MOODLE_PASS no configurada. Define MOODLE_PASS en .env o entorno.');
+}
 
 const scratchDir = path.resolve(projectRoot, 'scratch');
 if (!fs.existsSync(scratchDir)) {

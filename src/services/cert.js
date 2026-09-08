@@ -14,6 +14,9 @@ export const CertService = {
     return result?.customcerts || [];
   },
 
+  /**
+   * @deprecated Use getCertsByCourses instead.
+   */
   async getCertsByCoures(courseId) {
     return this.getCertsByCourses(courseId);
   },

@@ -34,11 +34,17 @@ if (isset($_SERVER['DOCUMENT_ROOT'])) {
     $config_paths[] = $_SERVER['DOCUMENT_ROOT'] . '/../config.php';
     $config_paths[] = $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 }
+$loaded = false;
 foreach ($config_paths as $path) {
     if (file_exists($path)) {
         require_once($path);
+        $loaded = true;
         break;
     }
+}
+
+if (!$loaded) {
+    die("Error: No se pudo encontrar config.php. El plugin debe estar instalado en /local/headlessui/ dentro de Moodle.");
 }
 
 $id = required_param('id', PARAM_INT); // Course module ID

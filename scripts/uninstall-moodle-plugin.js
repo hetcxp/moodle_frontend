@@ -2,10 +2,14 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import puppeteer from 'puppeteer-core';
+import { loadEnv } from './env-helper.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
+
+// Cargar variables de entorno desde .env si están disponibles
+loadEnv(projectRoot);
 
 // -------------------------------------------------------------
 // Configuración y Parámetros
@@ -23,10 +27,14 @@ const defaultUser = isLocal ? 'admin' : 'hteran';
 const CONFIG = {
   baseUrl: targetUrl.replace(/\/+$/, ''),
   user: process.env.MOODLE_USER || defaultUser,
-  pass: process.env.MOODLE_PASS || '@Rotceh84',
+  pass: process.env.MOODLE_PASS,
   chromeExecutable: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   headless: process.env.HEADLESS !== 'false'
 };
+
+if (!CONFIG.pass) {
+  throw new Error('Variable de entorno MOODLE_PASS no configurada. Define MOODLE_PASS en .env o entorno.');
+}
 
 const scratchDir = path.resolve(projectRoot, 'scratch');
 if (!fs.existsSync(scratchDir)) {

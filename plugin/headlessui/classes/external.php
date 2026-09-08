@@ -66,11 +66,11 @@ class external extends external_api {
         require_once($CFG->libdir . '/moodlelib.php');
 
         // Borrar keys anteriores del mismo usuario para evitar conflictos
-        delete_user_key('tool_mobile', $USER->id);
+        delete_user_key('local_headlessui', $USER->id);
 
         // Crear key nueva sin IP restriction y TTL de 1 minuto
         $validuntil = time() + 60;
-        $key = create_user_key('tool_mobile', $USER->id, null, null, $validuntil);
+        $key = create_user_key('local_headlessui', $USER->id, null, null, $validuntil);
 
         $autologinurl = $CFG->wwwroot . '/local/headlessui/autologin.php';
 

@@ -35,7 +35,7 @@ Para que los usuarios puedan autenticarse a través del login del frontend:
 3. Guarda los cambios.
 
 ### Paso 1.4: Configuración del Web Service `headless_service`
-El plugin `local_headless` crea automáticamente un servicio web llamado `Headless Service` (shortname: `headless_service`).
+El plugin `local_headlessui` crea automáticamente un servicio web llamado `Headless Service` (shortname: `headless_service`).
 1. Ve a **Site administration** > **Server** > **Web services** > **External services**.
 2. Asegúrate de que **Headless Service** está en la lista y activo.
 3. Si deseas permitir que los usuarios generen tokens para este servicio específico mediante `/login/token.php`, valida que sus capacidades y roles tengan el permiso `moodle/webservice:createtoken`.

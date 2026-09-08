@@ -46,9 +46,13 @@ class before_footer {
 
         $isembed = false;
         if (isset($PAGE) && $PAGE->url) {
-            $isembed = (strpos($PAGE->url->get_path(), '/h5p/embed.php') !== false);
+            $path = $PAGE->url->get_path();
+            $isembed = (strpos($path, '/h5p/embed.php') !== false) ||
+                       (strpos($path, '/local/headlessui/h5p.php') !== false);
         } else {
-            $isembed = (strpos($_SERVER['SCRIPT_NAME'] ?? '', '/h5p/embed.php') !== false);
+            $script = $_SERVER['SCRIPT_NAME'] ?? '';
+            $isembed = (strpos($script, '/h5p/embed.php') !== false) ||
+                       (strpos($script, '/local/headlessui/h5p.php') !== false);
         }
 
         if ($isembed) {
