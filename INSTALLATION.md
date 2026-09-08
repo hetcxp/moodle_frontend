@@ -6,14 +6,14 @@ Este documento detalla los pasos para conectar y desplegar este frontend contra 
 
 ## 1. Configuración del Moodle (Backend)
 
-El frontend requiere el plugin local `local_headless` instalado en Moodle para gestionar el autologin de actividades integradas (SCORM, H5P) y xAPI tracking.
+El frontend requiere el plugin local `local_headlessui` instalado en Moodle para gestionar el autologin de actividades integradas (SCORM, H5P) y xAPI tracking.
 
 ### Paso 1.1: Instalar el plugin
-1. Localiza el archivo `local_headless.zip` en la raíz de este proyecto.
-2. Descomprímelo en el directorio `local/` de tu instalación de Moodle:
+1. Localiza el directorio o empaquetado del plugin `plugin/headlessui`.
+2. Cópialo o descomprímelo en el directorio `local/` de tu instalación de Moodle:
    ```bash
    # Debería quedar en:
-   moodle/local/headless/
+   moodle/local/headlessui/
    ```
 3. Ejecuta la actualización de la base de datos de Moodle:
    * **Por terminal (Recomendado)**:
@@ -93,8 +93,8 @@ Los archivos de distribución se generarán en la carpeta `dist/`. Sube el conte
 4. Sube la carpeta `dist/` resultante a tu servidor de hosting o CDN.
 
 ### 3.2 Actualizar el Plugin en Moodle
-Si el plugin `local_headless` recibe actualizaciones:
-1. Reemplaza el directorio `local/headless/` de Moodle por la nueva versión.
+Si el plugin `local_headlessui` recibe actualizaciones:
+1. Reemplaza el directorio `local/headlessui/` de Moodle por la nueva versión.
 2. Ejecuta la actualización de base de datos desde la línea de comandos de Moodle:
    ```bash
    php admin/cli/upgrade.php

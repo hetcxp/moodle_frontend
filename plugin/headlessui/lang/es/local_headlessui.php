@@ -29,3 +29,4 @@ $string['errornotrequiredtopasswordchange'] = 'El usuario no tiene requerido cam
 $string['passwordchangedsuccessfully'] = 'Contraseña actualizada exitosamente.';
 $string['invalidautologinkey'] = 'Clave de auto-inicio de sesión inválida o expirada.';
 $string['autologinsuccess'] = 'Auto-inicio de sesión exitoso.';
+$string['error'] = 'Error: {$a}';

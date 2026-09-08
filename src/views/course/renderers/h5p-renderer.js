@@ -1,5 +1,6 @@
 import { CourseService } from '../../../services/courses.js';
 import { AuthService } from '../../../services/auth.js';
+import { API_CONFIG } from '../../../config/api.js';
 import { replacePluginfileUrls } from '../../../utils/image.js';
 import { sanitizeHtml } from '../../../utils/sanitize.js';
 import { getSavedTheme, getThemeTokens } from '../../../utils/theme.js';
@@ -17,8 +18,8 @@ export function createH5pRenderer({ mod, courseId }) {
   contentWrapper.className = 'resource-content h5p-content';
 
   const initialTheme = getSavedTheme();
-  const moodleBase = mod.url.split('/mod/')[0];
-  const embedUrl = `${moodleBase}/local/headless/h5p.php?id=${mod.id}&token=${AuthService.getToken()}&theme=${encodeURIComponent(initialTheme)}`;
+  const moodleBase = (mod.url ? mod.url.split('/mod/')[0] : (API_CONFIG.baseUrl || '')).replace(/\/+$/, '');
+  const embedUrl = `${moodleBase}/local/headlessui/h5p.php?id=${mod.id}&token=${AuthService.getToken()}&theme=${encodeURIComponent(initialTheme)}`;
 
   // Fetch introduction asynchronously
   CourseService.getH5pActivityIntro(courseId, mod.id).then(intro => {

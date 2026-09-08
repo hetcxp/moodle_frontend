@@ -29,3 +29,4 @@ $string['errornotrequiredtopasswordchange'] = 'User is not required to change pa
 $string['passwordchangedsuccessfully'] = 'Password changed successfully.';
 $string['invalidautologinkey'] = 'Invalid or expired auto-login key.';
 $string['autologinsuccess'] = 'Auto-login successful.';
+$string['error'] = 'Error: {$a}';

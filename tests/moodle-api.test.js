@@ -54,7 +54,7 @@ describe('MoodleApi Service', () => {
       vi.spyOn(AuthService, 'getUser').mockReturnValue({ userid: 42 });
       vi.spyOn(MoodleApi, 'call').mockResolvedValue({
         key: 'mock-autologin-key',
-        autologinurl: 'https://moodle.example.com/local/headless/autologin.php'
+        autologinurl: 'https://moodle.example.com/local/headlessui/autologin.php'
       });
 
       const target = 'https://moodle.example.com/mod/quiz/view.php?id=10';

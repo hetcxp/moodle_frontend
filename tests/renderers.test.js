@@ -81,7 +81,7 @@ describe('Course Activity Renderers', () => {
       const iframe = el.querySelector('iframe.h5p-iframe');
 
       expect(iframe).not.toBeNull();
-      expect(iframe.src).toContain('/local/headless/h5p.php?id=77&token=test-user-token-123');
+      expect(iframe.src).toContain('/local/headlessui/h5p.php?id=77&token=test-user-token-123');
       expect(iframe.src).toContain('&theme=light');
 
       await new Promise(r => setTimeout(r, 25));
