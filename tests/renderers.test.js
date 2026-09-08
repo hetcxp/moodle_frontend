@@ -69,7 +69,7 @@ describe('Course Activity Renderers', () => {
   });
 
   describe('createH5pRenderer', () => {
-    it('renders H5P iframe with auth token and fetches intro asynchronously', async () => {
+    it('renders H5P iframe with auth token, theme param and fetches intro asynchronously', async () => {
       vi.spyOn(CourseService, 'getH5pActivityIntro').mockResolvedValue('<p>Instrucciones de la actividad H5P</p>');
 
       const mod = {
@@ -82,11 +82,52 @@ describe('Course Activity Renderers', () => {
 
       expect(iframe).not.toBeNull();
       expect(iframe.src).toContain('/local/headless/h5p.php?id=77&token=test-user-token-123');
+      expect(iframe.src).toContain('&theme=light');
 
       await new Promise(r => setTimeout(r, 25));
 
       expect(el.querySelector('.h5p-description')).not.toBeNull();
       expect(el.querySelector('.h5p-description').textContent).toContain('Instrucciones de la actividad H5P');
+    });
+
+    it('sends theme tokens to H5P iframe on load and on dynamic themechange event', () => {
+      const mod = {
+        id: 78,
+        url: 'https://moodle.example.com/mod/h5pactivity/view.php?id=78'
+      };
+
+      const el = createH5pRenderer({ mod, courseId: 5 });
+      document.body.appendChild(el);
+
+      const iframe = el.querySelector('iframe.h5p-iframe');
+      const postMessageSpy = vi.fn();
+      Object.defineProperty(iframe, 'contentWindow', {
+        value: { postMessage: postMessageSpy },
+        configurable: true,
+        writable: true
+      });
+
+      // Trigger iframe load
+      iframe.dispatchEvent(new Event('load'));
+      expect(postMessageSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'set_h5p_theme' }),
+        '*'
+      );
+
+      // Trigger dynamic themechange to mint
+      window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: 'mint' } }));
+      expect(postMessageSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'set_h5p_theme',
+          theme: 'mint',
+          tokens: expect.objectContaining({ primary: '#059669' })
+        }),
+        '*'
+      );
+
+      // Cleanup
+      el.destroy();
+      document.body.removeChild(el);
     });
   });
 

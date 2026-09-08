@@ -2,6 +2,7 @@ import { CourseService } from '../../../services/courses.js';
 import { AuthService } from '../../../services/auth.js';
 import { replacePluginfileUrls } from '../../../utils/image.js';
 import { sanitizeHtml } from '../../../utils/sanitize.js';
+import { getSavedTheme, getThemeTokens } from '../../../utils/theme.js';
 
 /**
  * Renders an embedded H5P Activity (mod_h5pactivity) with xAPI tracking bridge and async description.
@@ -15,8 +16,9 @@ export function createH5pRenderer({ mod, courseId }) {
   const contentWrapper = document.createElement('div');
   contentWrapper.className = 'resource-content h5p-content';
 
+  const initialTheme = getSavedTheme();
   const moodleBase = mod.url.split('/mod/')[0];
-  const embedUrl = `${moodleBase}/local/headless/h5p.php?id=${mod.id}&token=${AuthService.getToken()}`;
+  const embedUrl = `${moodleBase}/local/headless/h5p.php?id=${mod.id}&token=${AuthService.getToken()}&theme=${encodeURIComponent(initialTheme)}`;
 
   // Fetch introduction asynchronously
   CourseService.getH5pActivityIntro(courseId, mod.id).then(intro => {
@@ -35,6 +37,35 @@ export function createH5pRenderer({ mod, courseId }) {
   iframe.style.width = '100%';
   iframe.style.border = 'none';
   iframe.style.minHeight = '500px';
+
+  const sendThemeToIframe = (themeId) => {
+    if (!iframe.contentWindow) return;
+    const tokens = getThemeTokens(themeId);
+    iframe.contentWindow.postMessage({
+      type: 'set_h5p_theme',
+      theme: themeId,
+      tokens
+    }, '*');
+  };
+
+  iframe.addEventListener('load', () => {
+    sendThemeToIframe(getSavedTheme());
+  });
+
+  const onThemeChange = (e) => {
+    if (!document.contains(contentWrapper)) {
+      window.removeEventListener('themechange', onThemeChange);
+      return;
+    }
+    const themeId = e.detail?.theme || getSavedTheme();
+    sendThemeToIframe(themeId);
+  };
+
+  window.addEventListener('themechange', onThemeChange);
+
+  contentWrapper.destroy = () => {
+    window.removeEventListener('themechange', onThemeChange);
+  };
 
   contentWrapper.appendChild(iframe);
   return contentWrapper;

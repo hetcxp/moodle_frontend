@@ -28,11 +28,11 @@ describe('Theme Management Utility and Selector', () => {
     document.documentElement.removeAttribute('data-theme');
   });
 
-  it('provides all four requested themes', () => {
+  it('provides all five requested themes', () => {
     const list = getThemesList();
-    expect(list.length).toBe(4);
+    expect(list.length).toBe(5);
     const ids = list.map(t => t.id);
-    expect(ids).toEqual(['light', 'dark', 'microsoft', 'gold-teal']);
+    expect(ids).toEqual(['light', 'dark', 'microsoft', 'gold-teal', 'mint']);
   });
 
   it('defaults to light theme when nothing is stored in localStorage', () => {
@@ -46,7 +46,7 @@ describe('Theme Management Utility and Selector', () => {
     expect(localStorage.getItem('moodle_app_theme')).toBe('dark');
   });
 
-  it('applies data-theme attribute for microsoft and gold-teal themes', () => {
+  it('applies data-theme attribute for microsoft, gold-teal, and mint themes', () => {
     setTheme('microsoft');
     expect(document.documentElement.getAttribute('data-theme')).toBe('microsoft');
     expect(localStorage.getItem('moodle_app_theme')).toBe('microsoft');
@@ -54,6 +54,10 @@ describe('Theme Management Utility and Selector', () => {
     setTheme('gold-teal');
     expect(document.documentElement.getAttribute('data-theme')).toBe('gold-teal');
     expect(localStorage.getItem('moodle_app_theme')).toBe('gold-teal');
+
+    setTheme('mint');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('mint');
+    expect(localStorage.getItem('moodle_app_theme')).toBe('mint');
   });
 
   it('removes data-theme attribute when reverting to light theme', () => {
@@ -69,18 +73,18 @@ describe('Theme Management Utility and Selector', () => {
     const listener = vi.fn();
     window.addEventListener('themechange', listener);
 
-    setTheme('gold-teal');
+    setTheme('mint');
     expect(listener).toHaveBeenCalledTimes(1);
-    expect(listener.mock.calls[0][0].detail).toEqual({ theme: 'gold-teal' });
+    expect(listener.mock.calls[0][0].detail).toEqual({ theme: 'mint' });
 
     window.removeEventListener('themechange', listener);
   });
 
   it('initTheme restores the stored theme', () => {
-    localStorage.setItem('moodle_app_theme', 'microsoft');
+    localStorage.setItem('moodle_app_theme', 'mint');
     const applied = initTheme();
-    expect(applied).toBe('microsoft');
-    expect(document.documentElement.getAttribute('data-theme')).toBe('microsoft');
+    expect(applied).toBe('mint');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('mint');
   });
 
   it('createThemeSelector generates toggle button and options for all themes', () => {
@@ -91,16 +95,16 @@ describe('Theme Management Utility and Selector', () => {
     expect(toggleBtn).not.toBeNull();
 
     const options = selector.querySelectorAll('.theme-option');
-    expect(options.length).toBe(4);
+    expect(options.length).toBe(5);
 
     // Toggle dropdown open
     toggleBtn.click();
     expect(selector.classList.contains('open')).toBe(true);
 
-    // Click on gold-teal option
-    const goldOption = options[3]; // gold-teal
-    goldOption.click();
-    expect(document.documentElement.getAttribute('data-theme')).toBe('gold-teal');
+    // Click on mint option
+    const mintOption = options[4]; // mint
+    mintOption.click();
+    expect(document.documentElement.getAttribute('data-theme')).toBe('mint');
     expect(selector.classList.contains('open')).toBe(false);
   });
 });

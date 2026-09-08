@@ -13,7 +13,9 @@ Hemos construido esta plataforma pensando en el estudiante moderno:
 - **📱 Experiencia de App (PWA):** Funciona y se siente como una aplicación móvil nativa. ¡Incluso puedes instalarla en tu teléfono!
 - **🎨 Diseño Premium:** Interfaz limpia, intuitiva y estéticamente atractiva. Adiós al desorden.
 - **🎓 Todo lo que necesitas:** Soporte completo para **Cursos, Cuestionarios (Quizzes), Foros interactivos y Visualizador de Certificados**. Todo fluye sin interrupciones.
-- **🌙 Tema Oscuro & Personalización:** Preparado para adaptarse a la identidad visual de tu institución o empresa (Tenant config).
+- **🎨 Sistema Multi-Tema & Mint Fresh:** 5 temas visuales cuidadosamente diseñados (**Claro**, **Oscuro**, **Microsoft Blue**, **Gold & Teal**, y el nuevo **Mint Fresh** refrescante y botánico).
+- **🌿 Puente H5P Dinámico:** Sincronización automática de temas y tokens de color en caliente hacia actividades H5P interactivas (JoubelUI, barras de progreso, contenedores) sin romper el tracking xAPI.
+- **🏢 Personalización por Tenant:** Preparado para adaptarse a la identidad visual de tu institución o empresa (Tenant config).
 
 Nuestro objetivo es simple: **Que aprender sea la única tarea difícil, no usar la plataforma.**
 

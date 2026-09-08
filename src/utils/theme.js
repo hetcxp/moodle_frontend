@@ -26,6 +26,13 @@ export const THEMES = [
     description: 'Edición Luxe Premium',
     icon: 'crown',
     colors: ['#091317', '#e5b84c', '#112229']
+  },
+  {
+    id: 'mint',
+    name: 'Mint Fresh',
+    description: 'Refrescante, limpio y botánico',
+    icon: 'leaf',
+    colors: ['#f0fbf7', '#059669', '#10b981']
   }
 ];
 
@@ -70,4 +77,56 @@ export function initTheme() {
 
 export function getThemesList() {
   return [...THEMES];
+}
+
+export const THEME_TOKENS = {
+  light: {
+    primary: '#1a73e8',
+    primaryHover: '#1557b0',
+    surface: '#ffffff',
+    background: '#ffffff',
+    text: '#111827',
+    textSecondary: '#4b5563',
+    border: 'rgba(0, 0, 0, 0.1)'
+  },
+  dark: {
+    primary: '#3b82f6',
+    primaryHover: '#2563eb',
+    surface: '#1e222d',
+    background: '#11141d',
+    text: '#f3f4f6',
+    textSecondary: '#9ca3af',
+    border: 'rgba(255, 255, 255, 0.12)'
+  },
+  microsoft: {
+    primary: '#0078d4',
+    primaryHover: '#005a9e',
+    surface: '#ffffff',
+    background: '#edf3f9',
+    text: '#18273a',
+    textSecondary: '#475a70',
+    border: '#d3e0ec'
+  },
+  'gold-teal': {
+    primary: '#e5b84c',
+    primaryHover: '#d4a337',
+    surface: '#112229',
+    background: '#091317',
+    text: '#f0fdfa',
+    textSecondary: '#8fa8ab',
+    border: 'rgba(229, 184, 76, 0.25)'
+  },
+  mint: {
+    primary: '#059669',
+    primaryHover: '#047857',
+    surface: '#ffffff',
+    background: '#f0fbf7',
+    text: '#092c23',
+    textSecondary: '#3d685c',
+    border: 'rgba(5, 150, 105, 0.2)'
+  }
+};
+
+export function getThemeTokens(themeId) {
+  return THEME_TOKENS[themeId] || THEME_TOKENS.light;
 }
