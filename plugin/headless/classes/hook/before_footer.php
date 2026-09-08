@@ -57,47 +57,82 @@ class before_footer {
                 'light' => [
                     'primary' => '#1a73e8',
                     'primaryHover' => '#1557b0',
+                    'primaryText' => '#ffffff',
                     'surface' => '#ffffff',
                     'background' => '#ffffff',
                     'text' => '#111827',
                     'textSecondary' => '#4b5563',
                     'border' => 'rgba(0,0,0,0.1)',
+                    'alternativeBase' => '#f8fafc',
+                    'alternativeHover' => '#e2e8f0',
+                    'feedbackCorrectMain' => '#15803d',
+                    'feedbackCorrectSecondary' => 'rgba(34, 197, 94, 0.12)',
+                    'feedbackIncorrectMain' => '#b91c1c',
+                    'feedbackIncorrectSecondary' => 'rgba(239, 68, 68, 0.12)',
                 ],
                 'dark' => [
                     'primary' => '#3b82f6',
                     'primaryHover' => '#2563eb',
+                    'primaryText' => '#ffffff',
                     'surface' => '#1e222d',
                     'background' => '#11141d',
                     'text' => '#f3f4f6',
-                    'textSecondary' => '#9ca3af',
+                    'textSecondary' => '#d1d5db',
                     'border' => 'rgba(255,255,255,0.12)',
+                    'alternativeBase' => '#1e222d',
+                    'alternativeHover' => '#2d3444',
+                    'feedbackCorrectMain' => '#4ade80',
+                    'feedbackCorrectSecondary' => 'rgba(34, 197, 94, 0.2)',
+                    'feedbackIncorrectMain' => '#f87171',
+                    'feedbackIncorrectSecondary' => 'rgba(239, 68, 68, 0.2)',
                 ],
                 'microsoft' => [
                     'primary' => '#0078d4',
                     'primaryHover' => '#005a9e',
+                    'primaryText' => '#ffffff',
                     'surface' => '#ffffff',
                     'background' => '#edf3f9',
                     'text' => '#18273a',
                     'textSecondary' => '#475a70',
                     'border' => '#d3e0ec',
+                    'alternativeBase' => '#ffffff',
+                    'alternativeHover' => '#e4eef7',
+                    'feedbackCorrectMain' => '#107c41',
+                    'feedbackCorrectSecondary' => 'rgba(16, 124, 65, 0.12)',
+                    'feedbackIncorrectMain' => '#a80000',
+                    'feedbackIncorrectSecondary' => 'rgba(168, 0, 0, 0.12)',
                 ],
                 'gold-teal' => [
                     'primary' => '#e5b84c',
                     'primaryHover' => '#d4a337',
+                    'primaryText' => '#091317',
                     'surface' => '#112229',
                     'background' => '#091317',
                     'text' => '#f0fdfa',
-                    'textSecondary' => '#8fa8ab',
+                    'textSecondary' => '#99f6e4',
                     'border' => 'rgba(229,184,76,0.25)',
+                    'alternativeBase' => '#112229',
+                    'alternativeHover' => '#1c323d',
+                    'feedbackCorrectMain' => '#2dd4bf',
+                    'feedbackCorrectSecondary' => 'rgba(45, 212, 191, 0.2)',
+                    'feedbackIncorrectMain' => '#f87171',
+                    'feedbackIncorrectSecondary' => 'rgba(239, 68, 68, 0.2)',
                 ],
                 'mint' => [
                     'primary' => '#059669',
                     'primaryHover' => '#047857',
+                    'primaryText' => '#ffffff',
                     'surface' => '#ffffff',
                     'background' => '#f0fbf7',
                     'text' => '#092c23',
                     'textSecondary' => '#3d685c',
                     'border' => 'rgba(5,150,105,0.2)',
+                    'alternativeBase' => '#ffffff',
+                    'alternativeHover' => '#e2f6ee',
+                    'feedbackCorrectMain' => '#047857',
+                    'feedbackCorrectSecondary' => 'rgba(5, 150, 105, 0.12)',
+                    'feedbackIncorrectMain' => '#b91c1c',
+                    'feedbackIncorrectSecondary' => 'rgba(239, 68, 68, 0.12)',
                 ],
             ];
 
@@ -117,10 +152,19 @@ class before_footer {
         if (!t) return '';
         var pHover = t.primaryHover || t.primary;
         var tSec = t.textSecondary || t.text;
+        var altBase = t.alternativeBase || t.surface || '#ffffff';
+        var altHover = t.alternativeHover || pHover;
+        var fbCorrMain = t.feedbackCorrectMain || '#22c55e';
+        var fbCorrSec = t.feedbackCorrectSecondary || 'rgba(34, 197, 94, 0.15)';
+        var fbIncorrMain = t.feedbackIncorrectMain || '#ef4444';
+        var fbIncorrSec = t.feedbackIncorrectSecondary || 'rgba(239, 68, 68, 0.15)';
+        var ctaText = t.primaryText || (t.primary === '#e5b84c' ? '#091317' : '#ffffff');
+        var border = t.border || 'rgba(0,0,0,0.1)';
         return ':root{' +
             '--h5p-theme-main-cta-base:' + t.primary + ' !important;' +
             '--h5p-theme-main-cta-light:' + pHover + ' !important;' +
             '--h5p-theme-main-cta-dark:' + pHover + ' !important;' +
+            '--h5p-theme-contrast-cta:' + ctaText + ' !important;' +
             '--h5p-theme-contrast-cta-white:' + t.primary + ' !important;' +
             '--h5p-theme-focus:' + t.primary + ' !important;' +
             '--h5p-theme-background:' + t.background + ' !important;' +
@@ -128,15 +172,82 @@ class before_footer {
             '--h5p-theme-text-primary:' + t.text + ' !important;' +
             '--h5p-theme-text-secondary:' + tSec + ' !important;' +
             '--h5p-theme-font-name:"Inter", sans-serif !important;' +
+            '--h5p-theme-alternative-base:' + altBase + ' !important;' +
+            '--h5p-theme-alternative-light:' + altHover + ' !important;' +
+            '--h5p-theme-alternative-dark:' + altHover + ' !important;' +
+            '--h5p-theme-alternative-darker:' + altHover + ' !important;' +
+            '--h5p-theme-secondary-cta-base:' + altBase + ' !important;' +
+            '--h5p-theme-secondary-cta-light:' + altHover + ' !important;' +
+            '--h5p-theme-secondary-cta-dark:' + altBase + ' !important;' +
+            '--h5p-theme-stroke-1:' + border + ' !important;' +
+            '--h5p-theme-stroke-2:' + border + ' !important;' +
+            '--h5p-theme-stroke-3:' + border + ' !important;' +
+            '--h5p-theme-feedback-correct-main:' + fbCorrMain + ' !important;' +
+            '--h5p-theme-feedback-correct-secondary:' + fbCorrSec + ' !important;' +
+            '--h5p-theme-feedback-incorrect-main:' + fbIncorrMain + ' !important;' +
+            '--h5p-theme-feedback-incorrect-secondary:' + fbIncorrSec + ' !important;' +
         '}' +
         'html.h5p-iframe, body, .h5p-content, .h5p-container, .h5p-iframe-wrapper{' +
             'background-color:' + t.background + ' !important;' +
             'color:' + t.text + ' !important;' +
             'font-family:"Inter", system-ui, -apple-system, sans-serif !important;' +
         '}' +
+        '.h5p-question, .h5p-multichoice > .h5p-question, .questionset .h5p-question, .questionset, .questionset-results, .h5p-question-content, .h5p-question-inner, .intro-page, .h5p-single-choice-set, .h5p-sc-set, .h5p-sc-question{' +
+            'background-color:transparent !important;' +
+            'background:transparent !important;' +
+            'filter:none !important;' +
+            'border-color:' + border + ' !important;' +
+            'color:' + t.text + ' !important;' +
+        '}' +
+        '.h5p-sub-title, .h5p-question-introduction, .h5p-question-title, .h5p-question-introduction p, .h5p-question-introduction *, .h5p-question-title *, .h5p-sub-title *{' +
+            'color:' + t.text + ' !important;' +
+        '}' +
+        '.h5p-sub-title{' +
+            'border-bottom:1px solid ' + border + ' !important;' +
+        '}' +
+        '.h5p-multichoice .h5p-answers li, .h5p-multichoice .h5p-alternative-container, .h5p-sc-alternatives li.h5p-sc-alternative, .h5p-sc-alternative, .h5p-true-false-answers .h5p-true-false-answer, .h5p-multichoice .h5p-answer:not(.h5p-correct):not(.h5p-wrong) .h5p-alternative-container{' +
+            'background-color:' + altBase + ' !important;' +
+            'background:' + altBase + ' !important;' +
+            'color:' + t.text + ' !important;' +
+            'border:1px solid ' + border + ' !important;' +
+            'border-radius:8px !important;' +
+            'transition:background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease !important;' +
+        '}' +
+        '.h5p-multichoice .h5p-alternative-container *, .h5p-sc-alternatives li.h5p-sc-alternative *, .h5p-sc-alternative *, .h5p-true-false-answers .h5p-true-false-answer *{' +
+            'color:' + t.text + ' !important;' +
+        '}' +
+        '.h5p-multichoice .h5p-answer:hover:not([aria-disabled="true"]):not(.h5p-correct):not(.h5p-wrong) .h5p-alternative-container, .h5p-sc-alternatives:not(.h5p-sc-selected) li.h5p-sc-alternative:hover, .h5p-true-false-answers .h5p-true-false-answer:hover:not(.h5p-correct):not(.h5p-wrong){' +
+            'background-color:' + altHover + ' !important;' +
+            'background:' + altHover + ' !important;' +
+            'border-color:' + t.primary + ' !important;' +
+            'transform:translateY(-1px) !important;' +
+        '}' +
+        '.h5p-multichoice .h5p-answer .h5p-alternative-container:before, .h5p-sc-alternatives li.h5p-sc-alternative:before, .h5p-true-false-answer:before{' +
+            'color:' + t.primary + ' !important;' +
+        '}' +
+        '.h5p-multichoice .h5p-answer[role="radio"][aria-checked="true"] .h5p-alternative-container, .h5p-multichoice .h5p-answer[role="checkbox"][aria-checked="true"] .h5p-alternative-container, .h5p-sc-alternatives.h5p-sc-selected li.h5p-sc-alternative{' +
+            'border-color:' + t.primary + ' !important;' +
+            'background-color:' + altHover + ' !important;' +
+        '}' +
+        '.h5p-multichoice .h5p-answers .h5p-answer.h5p-correct .h5p-alternative-container, .h5p-sc-alternatives.h5p-sc-selected li.h5p-sc-alternative.h5p-sc-reveal-correct, .h5p-true-false-answers .h5p-true-false-answer.h5p-correct{' +
+            'background-color:' + fbCorrSec + ' !important;' +
+            'border-color:' + fbCorrMain + ' !important;' +
+            'color:' + fbCorrMain + ' !important;' +
+        '}' +
+        '.h5p-multichoice .h5p-answers .h5p-answer.h5p-correct .h5p-alternative-container *, .h5p-sc-alternatives.h5p-sc-selected li.h5p-sc-alternative.h5p-sc-reveal-correct *{' +
+            'color:' + fbCorrMain + ' !important;' +
+        '}' +
+        '.h5p-multichoice .h5p-answers .h5p-answer.h5p-wrong .h5p-alternative-container, .h5p-sc-alternatives.h5p-sc-selected li.h5p-sc-alternative.h5p-sc-reveal-wrong, .h5p-true-false-answers .h5p-true-false-answer.h5p-wrong{' +
+            'background-color:' + fbIncorrSec + ' !important;' +
+            'border-color:' + fbIncorrMain + ' !important;' +
+            'color:' + fbIncorrMain + ' !important;' +
+        '}' +
+        '.h5p-multichoice .h5p-answers .h5p-answer.h5p-wrong .h5p-alternative-container *, .h5p-sc-alternatives.h5p-sc-selected li.h5p-sc-alternative.h5p-sc-reveal-wrong *{' +
+            'color:' + fbIncorrMain + ' !important;' +
+        '}' +
         '.joubel-ui-button, .h5p-joubelui-button, .h5p-question-buttons .joubel-ui-button, .h5p-theme-button, .h5p-core-button, .h5p-enable-solution, .h5p-show-solution-button, .h5p-question-check-answer{' +
             'background-color:' + t.primary + ' !important;' +
-            'color:#ffffff !important;' +
+            'color:' + ctaText + ' !important;' +
             'border-color:' + t.primary + ' !important;' +
             'border-radius:8px !important;' +
             'box-shadow:0 2px 6px rgba(0,0,0,0.12) !important;' +
@@ -151,15 +262,38 @@ class before_footer {
             'background-color:' + t.primary + ' !important;' +
         '}' +
         '.h5p-joubelui-score-bar, .h5p-progressbar{' +
-            'border-color:' + t.border + ' !important;' +
+            'border-color:' + border + ' !important;' +
             'background-color:' + t.surface + ' !important;' +
             'border-radius:6px !important;' +
         '}' +
-        '.h5p-sub-title, .h5p-question-introduction, .h5p-question-title{' +
-            'color:' + t.text + ' !important;' +
+        '.dots-container .progress-dot{' +
+            'background-color:' + border + ' !important;' +
+            'border:1px solid ' + border + ' !important;' +
         '}' +
-        '.h5p-sub-title{' +
-            'border-bottom:1px solid ' + t.border + ' !important;' +
+        '.dots-container .progress-dot.current{' +
+            'background-color:' + t.primary + ' !important;' +
+            'border-color:' + t.primary + ' !important;' +
+            'transform:scale(1.25) !important;' +
+        '}' +
+        '.dots-container .progress-dot.answered{' +
+            'background-color:' + t.primary + ' !important;' +
+            'opacity:0.6 !important;' +
+        '}' +
+        '.h5p-input, input.h5p-text-input, .h5p-blanks input{' +
+            'background-color:' + t.surface + ' !important;' +
+            'color:' + t.text + ' !important;' +
+            'border:1px solid ' + border + ' !important;' +
+            'border-radius:4px !important;' +
+            'padding:4px 8px !important;' +
+        '}' +
+        '.h5p-question-feedback, .h5p-feedback-content, .questionset-results{' +
+            'background-color:' + t.surface + ' !important;' +
+            'color:' + t.text + ' !important;' +
+            'border:1px solid ' + border + ' !important;' +
+            'border-radius:8px !important;' +
+        '}' +
+        '.h5p-question-feedback *, .questionset-results *{' +
+            'color:' + t.text + ' !important;' +
         '}';
     }
 
@@ -251,11 +385,21 @@ HTML;
     private static function generate_h5p_css(array $t): string {
         $pHover = $t['primaryHover'] ?? $t['primary'];
         $tSec = $t['textSecondary'] ?? $t['text'];
+        $altBase = $t['alternativeBase'] ?? ($t['surface'] ?? '#ffffff');
+        $altHover = $t['alternativeHover'] ?? $pHover;
+        $fbCorrMain = $t['feedbackCorrectMain'] ?? '#22c55e';
+        $fbCorrSec = $t['feedbackCorrectSecondary'] ?? 'rgba(34, 197, 94, 0.15)';
+        $fbIncorrMain = $t['feedbackIncorrectMain'] ?? '#ef4444';
+        $fbIncorrSec = $t['feedbackIncorrectSecondary'] ?? 'rgba(239, 68, 68, 0.15)';
+        $ctaText = $t['primaryText'] ?? (($t['primary'] ?? '') === '#e5b84c' ? '#091317' : '#ffffff');
+        $border = $t['border'] ?? 'rgba(0,0,0,0.1)';
+
         return "
 :root {
     --h5p-theme-main-cta-base: {$t['primary']} !important;
     --h5p-theme-main-cta-light: {$pHover} !important;
     --h5p-theme-main-cta-dark: {$pHover} !important;
+    --h5p-theme-contrast-cta: {$ctaText} !important;
     --h5p-theme-contrast-cta-white: {$t['primary']} !important;
     --h5p-theme-focus: {$t['primary']} !important;
     --h5p-theme-background: {$t['background']} !important;
@@ -263,15 +407,82 @@ HTML;
     --h5p-theme-text-primary: {$t['text']} !important;
     --h5p-theme-text-secondary: {$tSec} !important;
     --h5p-theme-font-name: 'Inter', sans-serif !important;
+    --h5p-theme-alternative-base: {$altBase} !important;
+    --h5p-theme-alternative-light: {$altHover} !important;
+    --h5p-theme-alternative-dark: {$altHover} !important;
+    --h5p-theme-alternative-darker: {$altHover} !important;
+    --h5p-theme-secondary-cta-base: {$altBase} !important;
+    --h5p-theme-secondary-cta-light: {$altHover} !important;
+    --h5p-theme-secondary-cta-dark: {$altBase} !important;
+    --h5p-theme-stroke-1: {$border} !important;
+    --h5p-theme-stroke-2: {$border} !important;
+    --h5p-theme-stroke-3: {$border} !important;
+    --h5p-theme-feedback-correct-main: {$fbCorrMain} !important;
+    --h5p-theme-feedback-correct-secondary: {$fbCorrSec} !important;
+    --h5p-theme-feedback-incorrect-main: {$fbIncorrMain} !important;
+    --h5p-theme-feedback-incorrect-secondary: {$fbIncorrSec} !important;
 }
 html.h5p-iframe, body, .h5p-content, .h5p-container, .h5p-iframe-wrapper {
     background-color: {$t['background']} !important;
     color: {$t['text']} !important;
     font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
 }
+.h5p-question, .h5p-multichoice > .h5p-question, .questionset .h5p-question, .questionset, .questionset-results, .h5p-question-content, .h5p-question-inner, .intro-page, .h5p-single-choice-set, .h5p-sc-set, .h5p-sc-question {
+    background-color: transparent !important;
+    background: transparent !important;
+    filter: none !important;
+    border-color: {$border} !important;
+    color: {$t['text']} !important;
+}
+.h5p-sub-title, .h5p-question-introduction, .h5p-question-title, .h5p-question-introduction p, .h5p-question-introduction *, .h5p-question-title *, .h5p-sub-title * {
+    color: {$t['text']} !important;
+}
+.h5p-sub-title {
+    border-bottom: 1px solid {$border} !important;
+}
+.h5p-multichoice .h5p-answers li, .h5p-multichoice .h5p-alternative-container, .h5p-sc-alternatives li.h5p-sc-alternative, .h5p-sc-alternative, .h5p-true-false-answers .h5p-true-false-answer, .h5p-multichoice .h5p-answer:not(.h5p-correct):not(.h5p-wrong) .h5p-alternative-container {
+    background-color: {$altBase} !important;
+    background: {$altBase} !important;
+    color: {$t['text']} !important;
+    border: 1px solid {$border} !important;
+    border-radius: 8px !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease !important;
+}
+.h5p-multichoice .h5p-alternative-container *, .h5p-sc-alternatives li.h5p-sc-alternative *, .h5p-sc-alternative *, .h5p-true-false-answers .h5p-true-false-answer * {
+    color: {$t['text']} !important;
+}
+.h5p-multichoice .h5p-answer:hover:not([aria-disabled=\"true\"]):not(.h5p-correct):not(.h5p-wrong) .h5p-alternative-container, .h5p-sc-alternatives:not(.h5p-sc-selected) li.h5p-sc-alternative:hover, .h5p-true-false-answers .h5p-true-false-answer:hover:not(.h5p-correct):not(.h5p-wrong) {
+    background-color: {$altHover} !important;
+    background: {$altHover} !important;
+    border-color: {$t['primary']} !important;
+    transform: translateY(-1px) !important;
+}
+.h5p-multichoice .h5p-answer .h5p-alternative-container:before, .h5p-sc-alternatives li.h5p-sc-alternative:before, .h5p-true-false-answer:before {
+    color: {$t['primary']} !important;
+}
+.h5p-multichoice .h5p-answer[role=\"radio\"][aria-checked=\"true\"] .h5p-alternative-container, .h5p-multichoice .h5p-answer[role=\"checkbox\"][aria-checked=\"true\"] .h5p-alternative-container, .h5p-sc-alternatives.h5p-sc-selected li.h5p-sc-alternative {
+    border-color: {$t['primary']} !important;
+    background-color: {$altHover} !important;
+}
+.h5p-multichoice .h5p-answers .h5p-answer.h5p-correct .h5p-alternative-container, .h5p-sc-alternatives.h5p-sc-selected li.h5p-sc-alternative.h5p-sc-reveal-correct, .h5p-true-false-answers .h5p-true-false-answer.h5p-correct {
+    background-color: {$fbCorrSec} !important;
+    border-color: {$fbCorrMain} !important;
+    color: {$fbCorrMain} !important;
+}
+.h5p-multichoice .h5p-answers .h5p-answer.h5p-correct .h5p-alternative-container *, .h5p-sc-alternatives.h5p-sc-selected li.h5p-sc-alternative.h5p-sc-reveal-correct * {
+    color: {$fbCorrMain} !important;
+}
+.h5p-multichoice .h5p-answers .h5p-answer.h5p-wrong .h5p-alternative-container, .h5p-sc-alternatives.h5p-sc-selected li.h5p-sc-alternative.h5p-sc-reveal-wrong, .h5p-true-false-answers .h5p-true-false-answer.h5p-wrong {
+    background-color: {$fbIncorrSec} !important;
+    border-color: {$fbIncorrMain} !important;
+    color: {$fbIncorrMain} !important;
+}
+.h5p-multichoice .h5p-answers .h5p-answer.h5p-wrong .h5p-alternative-container *, .h5p-sc-alternatives.h5p-sc-selected li.h5p-sc-alternative.h5p-sc-reveal-wrong * {
+    color: {$fbIncorrMain} !important;
+}
 .joubel-ui-button, .h5p-joubelui-button, .h5p-question-buttons .joubel-ui-button, .h5p-theme-button, .h5p-core-button, .h5p-enable-solution, .h5p-show-solution-button, .h5p-question-check-answer {
     background-color: {$t['primary']} !important;
-    color: #ffffff !important;
+    color: {$ctaText} !important;
     border-color: {$t['primary']} !important;
     border-radius: 8px !important;
     box-shadow: 0 2px 6px rgba(0,0,0,0.12) !important;
@@ -286,15 +497,38 @@ html.h5p-iframe, body, .h5p-content, .h5p-container, .h5p-iframe-wrapper {
     background-color: {$t['primary']} !important;
 }
 .h5p-joubelui-score-bar, .h5p-progressbar {
-    border-color: {$t['border']} !important;
+    border-color: {$border} !important;
     background-color: {$t['surface']} !important;
     border-radius: 6px !important;
 }
-.h5p-sub-title, .h5p-question-introduction, .h5p-question-title {
-    color: {$t['text']} !important;
+.dots-container .progress-dot {
+    background-color: {$border} !important;
+    border: 1px solid {$border} !important;
 }
-.h5p-sub-title {
-    border-bottom: 1px solid {$t['border']} !important;
+.dots-container .progress-dot.current {
+    background-color: {$t['primary']} !important;
+    border-color: {$t['primary']} !important;
+    transform: scale(1.25) !important;
+}
+.dots-container .progress-dot.answered {
+    background-color: {$t['primary']} !important;
+    opacity: 0.6 !important;
+}
+.h5p-input, input.h5p-text-input, .h5p-blanks input {
+    background-color: {$t['surface']} !important;
+    color: {$t['text']} !important;
+    border: 1px solid {$border} !important;
+    border-radius: 4px !important;
+    padding: 4px 8px !important;
+}
+.h5p-question-feedback, .h5p-feedback-content, .questionset-results {
+    background-color: {$t['surface']} !important;
+    color: {$t['text']} !important;
+    border: 1px solid {$border} !important;
+    border-radius: 8px !important;
+}
+.h5p-question-feedback *, .questionset-results * {
+    color: {$t['text']} !important;
 }
 ";
     }

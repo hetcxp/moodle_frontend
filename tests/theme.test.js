@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { THEMES, getSavedTheme, setTheme, initTheme, getThemesList } from '../src/utils/theme.js';
+import { THEMES, getSavedTheme, setTheme, initTheme, getThemesList, getThemeTokens } from '../src/utils/theme.js';
 import { createThemeSelector } from '../src/components/header.js';
 
 describe('Theme Management Utility and Selector', () => {
@@ -106,5 +106,20 @@ describe('Theme Management Utility and Selector', () => {
     mintOption.click();
     expect(document.documentElement.getAttribute('data-theme')).toBe('mint');
     expect(selector.classList.contains('open')).toBe(false);
+  });
+
+  it('provides complete contrast and alternative tokens for all themes', () => {
+    for (const theme of THEMES) {
+      const tokens = getThemeTokens(theme.id);
+      expect(tokens).toBeDefined();
+      expect(tokens.primary).toBeDefined();
+      expect(tokens.surface).toBeDefined();
+      expect(tokens.background).toBeDefined();
+      expect(tokens.text).toBeDefined();
+      expect(tokens.alternativeBase).toBeDefined();
+      expect(tokens.alternativeHover).toBeDefined();
+      expect(tokens.feedbackCorrectMain).toBeDefined();
+      expect(tokens.feedbackIncorrectMain).toBeDefined();
+    }
   });
 });
