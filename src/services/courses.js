@@ -17,7 +17,7 @@ export const CourseService = {
         MoodleApi.call('core_enrol_get_users_courses', {
           userid: user.userid
         }),
-        MoodleApi.callWithFallback('local_headless_get_user_enrolments', {
+        MoodleApi.callWithFallback('local_headlessui_get_user_enrolments', {
           userid: user.userid
         }).catch(() => null)
       ]);

@@ -10,7 +10,7 @@ export const PasswordService = {
     }
 
     try {
-      const response = await MoodleApi.call('local_headless_change_password', { 
+      const response = await MoodleApi.call('local_headlessui_change_password', { 
         newpassword 
       }, tempSession.token);
       

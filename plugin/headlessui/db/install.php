@@ -26,15 +26,39 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Installation hook for local_headlessui.
- * Ensures headless_service enables file downloads and uploads.
+ * Configures headless_service and registers functions in moodle_mobile_app.
  */
 function xmldb_local_headlessui_install() {
     global $DB;
 
+    // Configurar permisos de archivos en headless_service
     $service = $DB->get_record('external_services', ['shortname' => 'headless_service']);
     if ($service) {
         $service->downloadfiles = 1;
         $service->uploadfiles = 1;
         $DB->update_record('external_services', $service);
+    }
+
+    // Registrar funciones en moodle_mobile_app
+    $mobileservice = $DB->get_record('external_services', ['shortname' => 'moodle_mobile_app'], 'id');
+    if ($mobileservice) {
+        $functions = [
+            'local_headlessui_get_autologin_key',
+            'local_headlessui_change_password',
+            'local_headlessui_get_user_enrolments',
+        ];
+
+        foreach ($functions as $fname) {
+            $exists = $DB->record_exists('external_services_functions', [
+                'externalserviceid' => $mobileservice->id,
+                'functionname'      => $fname,
+            ]);
+            if (!$exists) {
+                $DB->insert_record('external_services_functions', [
+                    'externalserviceid' => $mobileservice->id,
+                    'functionname'      => $fname,
+                ]);
+            }
+        }
     }
 }

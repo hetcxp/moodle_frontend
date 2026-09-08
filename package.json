@@ -1,6 +1,6 @@
 {
   "name": "moodle_frontend",
-  "version": "2.0.2",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,6 +13,9 @@
     "moodle:upgrade": "/opt/homebrew/opt/php@8.3/bin/php /Users/hectorteran/Dev/moodle-dev/admin/cli/upgrade.php --non-interactive",
     "moodle:purge": "/opt/homebrew/opt/php@8.3/bin/php /Users/hectorteran/Dev/moodle-dev/admin/cli/purge_caches.php",
     "moodle:sync": "npm run build:moodle && npm run moodle:upgrade && npm run moodle:purge",
+    "moodle:uninstall": "node scripts/uninstall-moodle-plugin.js --plugin local_headless",
+    "moodle:validate": "node scripts/validate-headlessui.js --url http://localhost:8000",
+    "moodle:validate:lts": "node scripts/validate-headlessui.js --url https://lts.academyfactory.online",
     "moodle:check": "node scripts/sync-moodle-plugins.js --check-only",
     "moodle:deploy:lts": "node scripts/sync-moodle-plugins.js",
     "moodle:deploy:lts:force": "node scripts/sync-moodle-plugins.js --force",

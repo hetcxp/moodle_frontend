@@ -28,7 +28,7 @@ describe('PasswordService & ChangePassword View', () => {
       expect(res.errormessage).toContain('No hay sesión temporal activa');
     });
 
-    it('calls local_headless_change_password with temp token and new password', async () => {
+    it('calls local_headlessui_change_password with temp token and new password', async () => {
       vi.spyOn(AuthService, 'getTempSession').mockReturnValue({
         token: 'temp-token-999',
         username: 'estudiante_temp',
@@ -45,7 +45,7 @@ describe('PasswordService & ChangePassword View', () => {
       const res = await PasswordService.change(mockPassword);
 
       expect(apiSpy).toHaveBeenCalledWith(
-        'local_headless_change_password',
+        'local_headlessui_change_password',
         { newpassword: mockPassword },
         'temp-token-999'
       );

@@ -317,26 +317,37 @@ async function installPluginViaWeb(page, plugin, zipPath) {
     const currentUrl = page.url();
     console.log(`  Paso migración BD (${loopCount}): ${currentUrl}`);
 
-    const progressBtn = await page.$(
-      'input[type="submit"][name="upgradesubmit"], ' +
-      'input[type="submit"][value*="Actualizar"], ' +
-      'input[type="submit"][value*="Upgrade"], ' +
-      'form[action*="upgradesettings"] input[type="submit"], ' +
-      'form.singlebutton button.btn-primary, ' +
-      'input[type="submit"][value*="Guardar cambios"], ' +
-      'input[type="submit"][value*="Save changes"], ' +
-      'input[type="submit"][value*="Continuar"], ' +
-      'input[type="submit"][value*="Continue"]'
-    );
+    if (currentUrl.includes('admin/index.php?cache=1') || currentUrl.includes('/admin/index.php#') || currentUrl.includes('/admin/plugins.php')) {
+      console.log('  Llegada a pantalla final de Notificaciones/Plugins. Migración de BD completada.');
+      break;
+    }
+
+    const progressHandle = await page.evaluateHandle(() => {
+      const candidates = Array.from(document.querySelectorAll('button, a.btn, input[type="submit"]'));
+      return candidates.find(el => {
+        const txt = (el.innerText || el.value || '').trim().toLowerCase();
+        return txt.includes('continuar') ||
+               txt.includes('continue') ||
+               txt.includes('actualizar base de datos') ||
+               txt.includes('upgrade moodle database');
+      }) || null;
+    });
+
+    const progressBtn = progressHandle.asElement();
 
     if (progressBtn) {
       const btnText = await page.evaluate(el => el.value || el.innerText, progressBtn);
       console.log(`  Presionando botón de progreso: "${btnText.trim()}"...`);
-      await Promise.all([
-        progressBtn.click(),
-        page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 180000 })
-      ]);
-      await new Promise(r => setTimeout(r, 2000));
+      try {
+        await Promise.all([
+          progressBtn.click(),
+          page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 180000 }).catch(() => {})
+        ]);
+        await new Promise(r => setTimeout(r, 2000));
+      } catch (err) {
+        console.log(`  Navegación concluida o botón no interactivo (${err.message}).`);
+        break;
+      }
     } else {
       console.log('  No quedan pantallas pendientes de migración de BD.');
       break;

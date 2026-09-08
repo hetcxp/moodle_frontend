@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * External Web Service API definitions for local_headless.
+ * External Web Service API definitions for local_headlessui.
  *
- * @package    local_headless
+ * @package    local_headlessui
  * @copyright  2024 Hector Teran
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_headless;
+namespace local_headlessui;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -34,9 +34,9 @@ use core_external\external_single_structure;
 use core_external\external_value;
 
 /**
- * External Web Service API implementation for local_headless.
+ * External Web Service API implementation for local_headlessui.
  *
- * @package    local_headless
+ * @package    local_headlessui
  * @category   external
  * @copyright  2024 Hector Teran
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -72,7 +72,7 @@ class external extends external_api {
         $validuntil = time() + 60;
         $key = create_user_key('tool_mobile', $USER->id, null, null, $validuntil);
 
-        $autologinurl = $CFG->wwwroot . '/local/headless/autologin.php';
+        $autologinurl = $CFG->wwwroot . '/local/headlessui/autologin.php';
 
         return [
             'key'          => $key,
@@ -118,7 +118,7 @@ class external extends external_api {
         $params = self::validate_parameters(self::change_password_parameters(), ['newpassword' => $newpassword]);
 
         if (get_user_preferences('auth_forcepasswordchange', 0, $USER->id) != 1) {
-            return ['success' => false, 'errormessage' => get_string('errornotrequiredtopasswordchange', 'local_headless')];
+            return ['success' => false, 'errormessage' => get_string('errornotrequiredtopasswordchange', 'local_headlessui')];
         }
 
         $errmsg = '';

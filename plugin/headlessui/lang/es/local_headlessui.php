@@ -25,3 +25,7 @@
 $string['pluginname'] = 'Headless UI';
 $string['servicenotconfigured'] = 'El servicio web headless_service no está configurado en esta instancia de Moodle.';
 $string['apptitle'] = 'Moodle App';
+$string['errornotrequiredtopasswordchange'] = 'El usuario no tiene requerido cambiar su contraseña.';
+$string['passwordchangedsuccessfully'] = 'Contraseña actualizada exitosamente.';
+$string['invalidautologinkey'] = 'Clave de auto-inicio de sesión inválida o expirada.';
+$string['autologinsuccess'] = 'Auto-inicio de sesión exitoso.';

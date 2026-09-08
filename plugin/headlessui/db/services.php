@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Web service function definitions for local_headless.
+ * Web service function definitions for local_headlessui.
  *
- * @package    local_headless
+ * @package    local_headlessui
  * @copyright  2024 Hector Teran
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -25,26 +25,26 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = [
-    'local_headless_get_autologin_key' => [
-        'classname'   => 'local_headless\external',
+    'local_headlessui_get_autologin_key' => [
+        'classname'   => 'local_headlessui\external',
         'methodname'  => 'get_autologin_key',
-        'classpath'   => 'local/headless/classes/external.php',
+        'classpath'   => 'local/headlessui/classes/external.php',
         'description' => 'Get an autologin key for headless frontend.',
         'type'        => 'read',
         'ajax'        => true,
     ],
-    'local_headless_change_password' => [
-        'classname'   => 'local_headless\external',
+    'local_headlessui_change_password' => [
+        'classname'   => 'local_headlessui\external',
         'methodname'  => 'change_password',
-        'classpath'   => 'local/headless/classes/external.php',
+        'classpath'   => 'local/headlessui/classes/external.php',
         'description' => 'Allows a user with forcepasswordchange flag to set a new password',
         'type'        => 'write',
         'loginrequired' => true,
     ],
-    'local_headless_get_user_enrolments' => [
-        'classname'   => 'local_headless\external',
+    'local_headlessui_get_user_enrolments' => [
+        'classname'   => 'local_headlessui\external',
         'methodname'  => 'get_user_enrolments',
-        'classpath'   => 'local/headless/classes/external.php',
+        'classpath'   => 'local/headlessui/classes/external.php',
         'description' => 'Get active enrolments and expiration timestamps for a user',
         'type'        => 'read',
         'ajax'        => true,
@@ -55,9 +55,9 @@ $functions = [
 $services = [
     'Headless Service' => [
         'functions' => [
-            'local_headless_get_autologin_key',
-            'local_headless_change_password',
-            'local_headless_get_user_enrolments',
+            'local_headlessui_get_autologin_key',
+            'local_headlessui_change_password',
+            'local_headlessui_get_user_enrolments',
             'core_webservice_get_site_info',
             'core_enrol_get_users_courses',
             'core_course_search_courses',

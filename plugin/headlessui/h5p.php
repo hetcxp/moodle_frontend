@@ -17,7 +17,7 @@
 /**
  * H5P embed bridge endpoint for headless frontend.
  *
- * @package    local_headless
+ * @package    local_headlessui
  * @copyright  2024 Hector Teran
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -102,5 +102,5 @@ try {
     require_once($CFG->dirroot . '/h5p/embed.php');
     exit;
 } catch (Exception $e) {
-    print_error('error', 'local_headless', '', $e->getMessage());
+    print_error('error', 'local_headlessui', '', $e->getMessage());
 }

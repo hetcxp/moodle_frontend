@@ -81,7 +81,7 @@ export const MoodleApi = {
    */
   async getAutoLoginUrl(targetUrl) {
     try {
-      const result = await this.call('local_headless_get_autologin_key', {});
+      const result = await this.call('local_headlessui_get_autologin_key', {});
 
       if (result && result.key && result.autologinurl) {
         const finalUrl = new URL(result.autologinurl);

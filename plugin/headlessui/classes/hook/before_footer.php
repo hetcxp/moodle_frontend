@@ -15,14 +15,14 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Hook handler for before_footer_html_generation in local_headless.
+ * Hook handler for before_footer_html_generation in local_headlessui.
  *
- * @package    local_headless
+ * @package    local_headlessui
  * @copyright  2024 Hector Teran
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_headless\hook;
+namespace local_headlessui\hook;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -31,7 +31,7 @@ use core\hook\output\before_footer_html_generation;
 /**
  * Hook callback implementation for before_footer_html_generation.
  *
- * @package    local_headless
+ * @package    local_headlessui
  * @copyright  2024 Hector Teran
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

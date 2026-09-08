@@ -33,7 +33,54 @@ defined('MOODLE_INTERNAL') || die();
 function xmldb_local_headlessui_upgrade($oldversion) {
     global $DB;
 
-    // Future upgrades for local_headlessui will be defined here.
+    if ($oldversion < 2026090801) {
+        // 1. Asegurar flags downloadfiles y uploadfiles en headless_service
+        $headlessservice = $DB->get_record('external_services', ['shortname' => 'headless_service']);
+        if ($headlessservice) {
+            $headlessservice->downloadfiles = 1;
+            $headlessservice->uploadfiles = 1;
+            $DB->update_record('external_services', $headlessservice);
+        }
+
+        // 2. Registrar funciones local_headlessui_* en headless_service y moodle_mobile_app
+        $newfunctions = [
+            'local_headlessui_get_autologin_key',
+            'local_headlessui_change_password',
+            'local_headlessui_get_user_enrolments',
+        ];
+
+        $targetservices = ['headless_service', 'moodle_mobile_app'];
+        foreach ($targetservices as $sname) {
+            $service = $DB->get_record('external_services', ['shortname' => $sname], 'id');
+            if ($service) {
+                foreach ($newfunctions as $fname) {
+                    $exists = $DB->record_exists('external_services_functions', [
+                        'externalserviceid' => $service->id,
+                        'functionname'      => $fname,
+                    ]);
+                    if (!$exists) {
+                        $DB->insert_record('external_services_functions', [
+                            'externalserviceid' => $service->id,
+                            'functionname'      => $fname,
+                        ]);
+                    }
+                }
+            }
+        }
+
+        // 3. Limpiar funciones obsoletas local_headless_* de servicios y catálogo de funciones
+        $oldfunctions = [
+            'local_headless_get_autologin_key',
+            'local_headless_change_password',
+            'local_headless_get_user_enrolments',
+        ];
+        foreach ($oldfunctions as $oldfname) {
+            $DB->delete_records('external_services_functions', ['functionname' => $oldfname]);
+            $DB->delete_records('external_functions', ['name' => $oldfname]);
+        }
+
+        upgrade_plugin_savepoint(true, 2026090801, 'local', 'headlessui');
+    }
 
     return true;
 }

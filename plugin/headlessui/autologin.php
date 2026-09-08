@@ -17,7 +17,7 @@
 /**
  * Auto-login endpoint for headless frontend authentication.
  *
- * @package    local_headless
+ * @package    local_headlessui
  * @copyright  2024 Hector Teran
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

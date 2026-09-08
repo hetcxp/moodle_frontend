@@ -15,15 +15,19 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'local_headless', language 'en'.
+ * Hook callbacks configuration for local_headlessui.
  *
- * @package    local_headless
+ * @package    local_headlessui
  * @copyright  2024 Hector Teran
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Headless Frontend Utils';
-$string['errornotrequiredtopasswordchange'] = 'User is not required to change password.';
-$string['passwordchangedsuccessfully'] = 'Password changed successfully.';
-$string['invalidautologinkey'] = 'Invalid or expired auto-login key.';
-$string['autologinsuccess'] = 'Auto-login successful.';
+defined('MOODLE_INTERNAL') || die();
+
+$callbacks = [
+    [
+        'hook' => \core\hook\output\before_footer_html_generation::class,
+        'callback' => 'local_headlessui\hook\before_footer::execute',
+        'priority' => 100,
+    ],
+];
