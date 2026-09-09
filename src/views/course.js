@@ -515,17 +515,12 @@ export async function renderCourse(container, courseId) {
     content.appendChild(sidebar);
     content.appendChild(mainArea);
 
-    // Initial render: auto-enter scorm/quiz when applicable, else show outline
-    const firstMod  = allModules[0];
-    const secondMod = allModules[1];
-
-    const isSingleScorm = firstMod?.modname === 'scorm';
-    const isForumQuiz   = firstMod?.modname === 'forum' && secondMod?.modname === 'quiz';
+    // Initial render: auto-enter if single scorm course, else show outline
+    const firstMod = allModules[0];
+    const isSingleScorm = allModules.length === 1 && firstMod?.modname === 'scorm';
 
     if (isSingleScorm) {
       renderMainContent(0);
-    } else if (isForumQuiz) {
-      renderMainContent(1);
     } else {
       renderMainContent(-1);
     }
