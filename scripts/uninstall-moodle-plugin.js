@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import puppeteer from 'puppeteer-core';
 import { loadEnv } from './env-helper.js';
+import { takeScreenshot, loginMoodle } from './automation-helper.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,54 +42,7 @@ if (!fs.existsSync(scratchDir)) {
   fs.mkdirSync(scratchDir, { recursive: true });
 }
 
-async function takeScreenshot(page, prefix) {
-  const filePath = path.join(scratchDir, `${prefix}_${Date.now()}.png`);
-  try {
-    await page.screenshot({ path: filePath, fullPage: true });
-    console.log(`  📸 Captura diagnóstica guardada: ${filePath}`);
-  } catch (err) {
-    console.warn(`  ⚠️ No se pudo guardar la captura: ${err.message}`);
-  }
-}
 
-async function loginMoodle(page) {
-  console.log(`  Autenticando en ${CONFIG.baseUrl}/login/index.php como '${CONFIG.user}'...`);
-  await page.goto(`${CONFIG.baseUrl}/login/index.php`, { waitUntil: 'networkidle2', timeout: 60000 });
-
-  if (!page.url().includes('/login/index.php')) {
-    console.log('  Sesión previamente establecida.');
-    return;
-  }
-
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    await page.waitForSelector('#username', { timeout: 10000 });
-    await page.evaluate(() => {
-      const u = document.querySelector('#username');
-      const p = document.querySelector('#password');
-      if (u) u.value = '';
-      if (p) p.value = '';
-    });
-    await page.type('#username', CONFIG.user, { delay: 20 });
-    await page.type('#password', CONFIG.pass, { delay: 20 });
-
-    await Promise.all([
-      page.click('#loginbtn'),
-      page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 })
-    ]);
-
-    if (!page.url().includes('/login/index.php')) {
-      console.log('  Autenticación exitosa.');
-      return;
-    }
-    console.warn(`  Reintentando login (intento ${attempt}/3)...`);
-  }
-
-  const errorMsg = await page.evaluate(() => {
-    const err = document.querySelector('.loginerrors, .alert-danger');
-    return err ? err.innerText.trim() : 'Error desconocido de credenciales';
-  });
-  throw new Error(`Fallo de autenticación en Moodle tras reintentos: ${errorMsg}`);
-}
 
 async function purgeCaches(page) {
   console.log('  Purgando cachés de Moodle (/admin/purgecaches.php)...');
@@ -152,7 +106,7 @@ async function processProgressButtons(page) {
   await page.setViewport({ width: 1280, height: 900 });
 
   try {
-    await loginMoodle(page);
+    await loginMoodle(page, CONFIG);
 
     console.log(`  Navegando a vista general de plugins (/admin/plugins.php)...`);
     await page.goto(`${CONFIG.baseUrl}/admin/plugins.php`, {
@@ -204,7 +158,7 @@ async function processProgressButtons(page) {
         process.exit(0);
       } else {
         console.warn(`⚠️ El plugin figura en la página pero no ofrece enlace directo de desinstalación.`);
-        await takeScreenshot(page, `no_uninstall_link_${TARGET_PLUGIN}`);
+        await takeScreenshot(page, `no_uninstall_link_${TARGET_PLUGIN}`, scratchDir);
       }
     } else {
       console.log(`  Enlace de desinstalación encontrado: ${uninstallHref}`);
@@ -213,7 +167,7 @@ async function processProgressButtons(page) {
       // Pantalla de confirmación de desinstalación
       console.log('  Confirmando desinstalación...');
       await new Promise(r => setTimeout(r, 1000));
-      await takeScreenshot(page, `confirm_uninstall_${TARGET_PLUGIN}`);
+      await takeScreenshot(page, `confirm_uninstall_${TARGET_PLUGIN}`, scratchDir);
 
       const confirmHandle = await page.evaluateHandle(() => {
         const candidates = Array.from(document.querySelectorAll('button, a.btn, input[type="submit"]'));
@@ -271,7 +225,7 @@ async function processProgressButtons(page) {
     process.exit(0);
   } catch (err) {
     console.error(`❌ Error durante la desinstalación: ${err.message}`);
-    await takeScreenshot(page, 'error_uninstall_fatal');
+    await takeScreenshot(page, 'error_uninstall_fatal', scratchDir);
     await browser.close();
     process.exit(1);
   }

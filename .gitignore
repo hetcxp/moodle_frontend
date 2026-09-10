@@ -28,3 +28,8 @@ coverage
 *.sln
 *.sw?
 scratch/
+
+# LLM Build artifacts
+.llm_build/*
+!.llm_build/index.md
+!.llm_build/operations.md

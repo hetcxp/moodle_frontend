@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { execSync } from 'child_process';
 import puppeteer from 'puppeteer-core';
 import { loadEnv } from './env-helper.js';
+import { takeScreenshot, loginMoodle } from './automation-helper.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,16 +43,6 @@ if (!fs.existsSync(scratchDir)) {
 // -------------------------------------------------------------
 function logStep(step, total, message) {
   console.log(`\n[${step}/${total}] ${message}`);
-}
-
-async function takeScreenshot(page, prefix) {
-  const filePath = path.join(scratchDir, `${prefix}_${Date.now()}.png`);
-  try {
-    await page.screenshot({ path: filePath, fullPage: true });
-    console.log(`  📸 Captura diagnóstica guardada: ${filePath}`);
-  } catch (err) {
-    console.warn(`  ⚠️ No se pudo guardar la captura: ${err.message}`);
-  }
 }
 
 // -------------------------------------------------------------
@@ -144,48 +135,7 @@ async function scrapeRemotePluginVersions(page, expectedComponents) {
   }, expectedComponents);
 }
 
-// -------------------------------------------------------------
-// 3. Autenticación en Moodle
-// -------------------------------------------------------------
-async function loginMoodle(page) {
-  console.log(`  Autenticando en ${CONFIG.baseUrl}/login/index.php como '${CONFIG.user}'...`);
-  await page.goto(`${CONFIG.baseUrl}/login/index.php`, { waitUntil: 'networkidle2', timeout: 60000 });
 
-  // Si ya hay sesión activa
-  if (!page.url().includes('/login/index.php')) {
-    console.log('  Sesión previamente establecida.');
-    return;
-  }
-
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    await page.waitForSelector('#username', { timeout: 10000 });
-    await page.evaluate(() => {
-      const u = document.querySelector('#username');
-      const p = document.querySelector('#password');
-      if (u) u.value = '';
-      if (p) p.value = '';
-    });
-    await page.type('#username', CONFIG.user, { delay: 20 });
-    await page.type('#password', CONFIG.pass, { delay: 20 });
-
-    await Promise.all([
-      page.click('#loginbtn'),
-      page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 })
-    ]);
-
-    if (!page.url().includes('/login/index.php')) {
-      console.log('  Autenticación exitosa.');
-      return;
-    }
-    console.warn(`  Reintentando login (intento ${attempt}/3)...`);
-  }
-
-  const errorMsg = await page.evaluate(() => {
-    const err = document.querySelector('.loginerrors, .alert-danger');
-    return err ? err.innerText.trim() : 'Error desconocido de credenciales';
-  });
-  throw new Error(`Fallo de autenticación en Moodle tras reintentos: ${errorMsg}`);
-}
 
 // -------------------------------------------------------------
 // 4. Empaquetado de Plugins en ZIP
@@ -287,7 +237,7 @@ async function installPluginViaWeb(page, plugin, zipPath) {
   });
 
   if (validationError) {
-    await takeScreenshot(page, `error_validacion_${plugin.component}`);
+    await takeScreenshot(page, `error_validacion_${plugin.component}`, scratchDir);
     throw new Error(`Validación de Moodle falló para ${plugin.component}: ${validationError}`);
   }
 
@@ -305,7 +255,7 @@ async function installPluginViaWeb(page, plugin, zipPath) {
 
   const confirmBtn = await page.waitForSelector(confirmSelector, { visible: true, timeout: 20000 }).catch(() => null);
   if (!confirmBtn) {
-    await takeScreenshot(page, `fallo_confirmacion_${plugin.component}`);
+    await takeScreenshot(page, `fallo_confirmacion_${plugin.component}`, scratchDir);
     throw new Error(`No se encontró el botón de confirmación de instalación para ${plugin.component}.`);
   }
 
@@ -416,7 +366,7 @@ async function installPluginViaWeb(page, plugin, zipPath) {
   const pluginsToInstall = [];
 
   try {
-    await loginMoodle(page);
+    await loginMoodle(page, CONFIG);
 
     const components = localPlugins.map(p => p.component);
     const remoteData = await scrapeRemotePluginVersions(page, components);
@@ -521,11 +471,10 @@ async function installPluginViaWeb(page, plugin, zipPath) {
     console.log('\n🎉 ¡ÉXITO TOTAL! Todos los plugins fueron instalados, actualizados y verificados.');
     process.exitCode = 0;
 
-  } catch (error) {
-    console.error('\n❌ ERROR CRÍTICO DURANTE LA EJECUCIÓN:');
-    console.error(error.message);
-    if (page) {
-      await takeScreenshot(page, 'error_fatal');
+  } catch (err) {
+    console.error(`\n❌ Error fatal: ${err.message}`);
+    if (browser) {
+      await takeScreenshot(page, 'error_fatal', scratchDir);
     }
     process.exitCode = 1;
   } finally {
