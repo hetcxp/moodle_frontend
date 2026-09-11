@@ -152,6 +152,30 @@ class before_footer {
 (function() {
     var presets = {$jsonpresets};
 
+    // Protect application storage keys from Moodle core storage_validation
+    try {
+        if (window.localStorage) {
+            var origClear = window.localStorage.clear.bind(window.localStorage);
+            window.localStorage.clear = function() {
+                var preserved = {};
+                try {
+                    for (var i = 0; i < window.localStorage.length; i++) {
+                        var k = window.localStorage.key(i);
+                        if (k && k.indexOf('moodle_app_') === 0) {
+                            preserved[k] = window.localStorage.getItem(k);
+                        }
+                    }
+                } catch (e) {}
+                origClear();
+                try {
+                    for (var pk in preserved) {
+                        window.localStorage.setItem(pk, preserved[pk]);
+                    }
+                } catch (e) {}
+            };
+        }
+    } catch (e) {}
+
     function generateCss(t) {
         if (!t) return '';
         var pHover = t.primaryHover || t.primary;
@@ -332,6 +356,20 @@ class before_footer {
     }
 
     var currentCss = document.getElementById('h5p-theme-custom-style') ? document.getElementById('h5p-theme-custom-style').textContent : '';
+
+    // Check parent window theme directly if accessible (same-origin fallback)
+    try {
+        if (window.parent && window.parent !== window) {
+            var pDoc = window.parent.document;
+            var parentTheme = (pDoc && pDoc.documentElement) ? pDoc.documentElement.getAttribute('data-theme') : null;
+            if (!parentTheme && window.parent.localStorage) {
+                parentTheme = window.parent.localStorage.getItem('moodle_app_theme');
+            }
+            if (parentTheme && presets[parentTheme]) {
+                currentCss = generateCss(presets[parentTheme]);
+            }
+        }
+    } catch (e) {}
 
     // Apply periodically during iframe bootstrap (max 25 attempts, 5 seconds, stops completely)
     var attempts = 0;

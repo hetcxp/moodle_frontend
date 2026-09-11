@@ -50,7 +50,8 @@ export function createH5pRenderer({ mod, courseId }) {
   };
 
   iframe.addEventListener('load', () => {
-    sendThemeToIframe(getSavedTheme());
+    const themeToApply = getSavedTheme() || initialTheme || 'light';
+    sendThemeToIframe(themeToApply);
   });
 
   const onThemeChange = (e) => {

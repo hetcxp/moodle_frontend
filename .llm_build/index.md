@@ -19,7 +19,12 @@
 ### Classes & Methods
 - **class before_footer** [L38]
   - `public execute(before_footer_html_generation $hook): void` [L44]
-  - `private generate_h5p_css(array $t): string` [L389]
+  - `private generate_h5p_css(array $t): string` [L427]
+
+## `scratch/test-h5p-scraper.js`
+### Functions
+- `function inspectH5pIframe(page, stepName)` [L23]
+- `function run()` [L88]
 
 ## `scripts/automation-helper.js`
 ### Functions
@@ -125,11 +130,13 @@
 
 ## `src/utils/theme.js`
 ### Functions
-- `export function getSavedTheme()` [L41]
-- `export function setTheme(themeId)` [L53]
-- `export function initTheme()` [L72]
-- `export function getThemesList()` [L78]
-- `export function getThemeTokens(themeId)` [L165]
+- `function getThemeCookie()` [L45]
+- `function setThemeCookie(val)` [L52]
+- `export function getSavedTheme()` [L94]
+- `export function setTheme(themeId)` [L141]
+- `export function initTheme()` [L169]
+- `export function getThemesList()` [L175]
+- `export function getThemeTokens(themeId)` [L262]
 
 ## `src/views/change-password.js`
 ### Functions

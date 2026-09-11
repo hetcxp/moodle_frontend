@@ -57,8 +57,10 @@ if (!empty($token)) {
         $user = core_user::get_user($usertoken->userid);
         if ($user) {
             core_user::require_active_user($user, true, true);
-            complete_user_login($user);
-            \core\session\manager::apply_concurrent_login_limit($user->id, session_id());
+            if (!isloggedin() || $USER->id !== $user->id) {
+                complete_user_login($user);
+                \core\session\manager::apply_concurrent_login_limit($user->id, session_id());
+            }
             
             // Force the session cookie to be SameSite=None and Secure for third-party iframe support
             $sessionname = session_name();
